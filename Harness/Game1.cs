@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace WorldGenerator
@@ -9,15 +10,15 @@ namespace WorldGenerator
     public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        private SpriteBatch? _spriteBatch;
 
-        private Effect _worldEffect;
-        private Mesh _cube;
+        private Effect? _worldEffect;
+        private Mesh? _cube;
         private Matrix _world = Matrix.CreateTranslation(0, 0, 0);
         private Matrix _view = Matrix.CreateLookAt(new Vector3(0, 0, 3), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
         private Matrix _projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.01f, 100f);
-        private TextureCube _globeTexture;
-        private TextureCube _normalTexture;
+        private TextureCube? _globeTexture;
+        private TextureCube? _normalTexture;
         private const int _cubeTexSize = 1024;
         private const float _initialZoom = 500;
         private float _zoomFactor = _initialZoom;
@@ -26,12 +27,21 @@ namespace WorldGenerator
         private int _width;
         private int _height;
 
+        private readonly IManifold _manifold;
+        private readonly DistToNearestPointField _field;
+        private readonly DistToGrayscaleVisualiser _visualiser = new();
+
+        private int _frameCount = -1;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
+            _manifold = new PointCloudManifold(
+                SphereLoader.LoadSphere());
+            _field = new(_manifold);
         }
 
         protected override void Initialize()
@@ -58,23 +68,27 @@ namespace WorldGenerator
 
         private void DrawGlobeTexture()
         {
-            var faces = new byte[6][];
-            var normalFaces = new Vector4[6][];
-            for (int i = 0; i < faces.Length; i++)
+            if (_frameCount == 0)
             {
-                normalFaces[i] = new Vector4[_cubeTexSize * _cubeTexSize];
-            }
+                var faces = new byte[6][];
+                var normalFaces = new Vector4[6][];
+                for (int i = 0; i < faces.Length; i++)
+                {
+                    normalFaces[i] = new Vector4[_cubeTexSize * _cubeTexSize];
+                }
 
-            //for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
+                //for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
 
-            Parallel.For(0, 6, i => faces[i] = DrawGlobeFace(i, normalFaces[i]));
+                Parallel.For(0, 6, i => faces[i] = DrawGlobeFace(i, normalFaces[i]));
 
-            _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
+                _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
 
-            for (int i = 0; i < faces.Length; i++)
-            {
-                _globeTexture.SetData((CubeMapFace)i, faces[i]);
-                _normalTexture.SetData((CubeMapFace)i, normalFaces[i]);
+
+                for (int i = 0; i < faces.Length; i++)
+                {
+                    _globeTexture?.SetData((CubeMapFace)i, faces[i]);
+                    _normalTexture?.SetData((CubeMapFace)i, normalFaces[i]);
+                }
             }
         }
 
@@ -96,10 +110,10 @@ namespace WorldGenerator
                     var dx = x - _cubeTexSize / 2;
                     var dy = y - _cubeTexSize / 2;
 
-                   // var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
-                   // dir = Vector3.Normalize(dir);
+                    var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
+                    dir = Vector3.Normalize(dir);
 
-                    var colour = Color.DarkBlue;
+                    var colour = _visualiser.GetColour(new(dir, Unit.None), _field);
 
                     var normalIndex = (x + y * _cubeTexSize);
                     var baseIndex = normalIndex * 4;
@@ -162,13 +176,12 @@ namespace WorldGenerator
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
-
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
+            _frameCount++;
             DrawGlobeTexture();
 
             GraphicsDevice.Clear(Color.Black);
@@ -190,13 +203,13 @@ namespace WorldGenerator
 
             var wvp = _world * _view * _projection;
 
-            _worldEffect.Parameters["WorldViewProjection"].SetValue(wvp);
-            _worldEffect.Parameters["CameraPos"].SetValue(cameraLoc);
-            _worldEffect.Parameters["GlobeTexture"].SetValue(_globeTexture);
+            _worldEffect?.Parameters["WorldViewProjection"].SetValue(wvp);
+            _worldEffect?.Parameters["CameraPos"].SetValue(cameraLoc);
+            _worldEffect?.Parameters["GlobeTexture"].SetValue(_globeTexture);
             // _worldEffect.Parameters["NormalTexture"].SetValue(_normalTexture);
 
-            GraphicsDevice.SetVertexBuffer(_cube.VertexBuffer);
-            GraphicsDevice.Indices = _cube.IndexBuffer;
+            GraphicsDevice.SetVertexBuffer(_cube?.VertexBuffer);
+            GraphicsDevice.Indices = _cube?.IndexBuffer;
 
             var rasterizerState = new RasterizerState
             {
@@ -208,10 +221,10 @@ namespace WorldGenerator
             rasterizerState.FillMode = FillMode.Solid;
             GraphicsDevice.RasterizerState = rasterizerState;
 
-            foreach (EffectPass pass in _worldEffect.CurrentTechnique.Passes)
+            foreach (EffectPass pass in _worldEffect?.CurrentTechnique.Passes ?? Enumerable.Empty<EffectPass>())
             {
                 pass.Apply();
-                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cube.Faces.Count);
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cube?.Faces.Count ?? 0);
             }
 
             base.Draw(gameTime);

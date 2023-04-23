@@ -2,15 +2,38 @@
 
 namespace WorldGenerator
 {
-    public interface IVisualiser
+    public interface IVisualiser<TInput>
     {
-        Color GetColour(Position pos, IFloatField field);
+        Color GetColour(Position pos, IField<TInput> field);
+    }
+
+    public class DistToGrayscaleVisualiser : IVisualiser<Distance>
+    {
+        public Color GetColour(Position pos, IField<Distance> field)
+        {
+            var dist = field.Value(pos);
+            var col = 1.0f - dist.Value * 200.0f;
+            return new Color(col, col, col);
+        }
     }
 
     public interface IManifold
     {
         IEnumerable<int> Neighbours(int origin);
         Position NearestPoint(Position testLocation);
+    }
+
+    public class TempManifold : IManifold
+    {
+        public Position NearestPoint(Position testLocation)
+        {
+            return new(Vector3.UnitX, Unit.None);
+        }
+
+        public IEnumerable<int> Neighbours(int origin)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class EuclideanManifold1d : IManifold
