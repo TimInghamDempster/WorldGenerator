@@ -28,7 +28,6 @@ namespace WorldGenerator
                 int i when i == _length - 1  => new int[] { _length - 2 },
                 _ => new int[] { origin - 1, origin + 1 }
             };
-
     }
 
     public interface IFloatField 
@@ -54,31 +53,8 @@ namespace WorldGenerator
         Giga
     }
 
-    public record Position(Vector3 Value, Unit Unit);
-    public record Velocity(Vector3 Value, Unit Unit);
-
-    public class Gravity : IField<Velocity>
-    {
-        public float _g_mPerS { get; init; }
-
-        public Gravity(float g_mPerS)
-        {
-            _g_mPerS = g_mPerS;
-        }
-
-        public Velocity Value(Position position)
-        {
-            var dir = position.Value;
-            
-            // point towards planet centre
-            dir *= -1.0f;
-
-            dir.Normalize();
-            dir *= _g_mPerS;
-
-            return new(dir, position.Unit);
-        }
-    }
+    public record struct Position(Vector3 Value, Unit Unit);
+    public record struct Velocity(Vector3 Value, Unit Unit);
 
     public static class FieldOperators
     {
