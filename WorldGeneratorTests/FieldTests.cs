@@ -14,14 +14,14 @@ namespace WorldGeneratorTests
             var random = new Random();
             var testVal = (float)random.NextDouble() * 100000.0f;
             initialData[0] = testVal;
-            var initialField = new Field(
-                new EuclideanManifold1d(initialData.Length),
-                initialData);
+            var initialField = new SimpleField(
+                initialData,
+                new EuclideanManifold1d(initialData.Length));
 
             // Act
             for(int i = 0; i < 1000; i++) 
             {
-                initialField = Field.DiffuseSimple(initialField);
+                initialField = FieldOperators.DiffuseSimple(initialField);
             }
 
             // Assert

@@ -4,7 +4,7 @@ namespace WorldGenerator
 {
     public interface IVisualiser
     {
-        Color GetColour(float[] pos, Field field);
+        Color GetColour(Position pos, IFloatField field);
     }
 
     public interface IManifold
@@ -31,11 +31,60 @@ namespace WorldGenerator
 
     }
 
-    public record Field(IManifold Manifold, IReadOnlyList<float> Values)
+    public interface IFloatField 
     {
-        public static Field DiffuseSimple(Field initialField)
+        float[] Values { get; } 
+        IManifold Manifold { get; }
+    }
+
+    public interface IFloatField<TValue> : IFloatField, IField<TValue> { }
+    public interface IField<TValue>
+    {
+        TValue Value(Position position);
+    }
+    public record SimpleField(float[] Values, IManifold Manifold) : IFloatField;
+
+    public enum Unit
+    {
+        None,
+        Deca,
+        Centi,
+        Kilo,
+        Mega,
+        Giga
+    }
+
+    public record Position(Vector3 Value, Unit Unit);
+    public record Velocity(Vector3 Value, Unit Unit);
+
+    public class Gravity : IField<Velocity>
+    {
+        public float _g_mPerS { get; init; }
+
+        public Gravity(float g_mPerS)
         {
-            var newVals = new float[initialField.Values.Count].ToList();
+            _g_mPerS = g_mPerS;
+        }
+
+        public Velocity Value(Position position)
+        {
+            var dir = position.Value;
+            
+            // point towards planet centre
+            dir *= -1.0f;
+
+            dir.Normalize();
+            dir *= _g_mPerS;
+
+            return new(dir, position.Unit);
+        }
+    }
+
+    public static class FieldOperators
+    {
+        public static SimpleField DiffuseSimple(IFloatField initialField)
+        {
+            var newVals = new float[initialField.Values.Count()];
 
             for(int i = 0; i < newVals.Count(); i++)
             {
@@ -47,7 +96,7 @@ namespace WorldGenerator
                     neighbours.Select(n => initialField.Values[n]).Sum() * 0.1f;
             }
 
-            return initialField with { Values = newVals };
+            return new(newVals, initialField.Manifold);
         }
     }
 }
