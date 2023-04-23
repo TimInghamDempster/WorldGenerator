@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Threading.Tasks;
 
 namespace WorldGenerator
 {
@@ -64,7 +65,9 @@ namespace WorldGenerator
                 normalFaces[i] = new Vector4[_cubeTexSize * _cubeTexSize];
             }
 
-            for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
+            //for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
+
+            Parallel.For(0, 6, i => faces[i] = DrawGlobeFace(i, normalFaces[i]));
 
             _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
 
@@ -93,8 +96,8 @@ namespace WorldGenerator
                     var dx = x - _cubeTexSize / 2;
                     var dy = y - _cubeTexSize / 2;
 
-                    var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
-                    dir = Vector3.Normalize(dir);
+                   // var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
+                   // dir = Vector3.Normalize(dir);
 
                     var colour = Color.DarkBlue;
 
