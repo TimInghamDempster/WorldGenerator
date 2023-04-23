@@ -10,6 +10,7 @@ namespace WorldGenerator
     public interface IManifold
     {
         IEnumerable<int> Neighbours(int origin);
+        Position NearestPoint(Position testLocation);
     }
 
     public class EuclideanManifold1d : IManifold
@@ -19,6 +20,11 @@ namespace WorldGenerator
         public EuclideanManifold1d(int length)
         {
             _length = length;
+        }
+
+        public Position NearestPoint(Position testLocation)
+        {
+            throw new NotImplementedException();
         }
 
         public IEnumerable<int> Neighbours(int origin) =>
@@ -55,6 +61,7 @@ namespace WorldGenerator
 
     public record struct Position(Vector3 Value, Unit Unit);
     public record struct Velocity(Vector3 Value, Unit Unit);
+    public record struct Distance(float Value, Unit Unit);
 
     public static class FieldOperators
     {
