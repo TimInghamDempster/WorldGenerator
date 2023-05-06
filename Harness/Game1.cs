@@ -77,9 +77,9 @@ namespace WorldGenerator
                     normalFaces[i] = new Vector4[_cubeTexSize * _cubeTexSize];
                 }
 
-                //for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
+                for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
 
-                Parallel.For(0, 6, i => faces[i] = DrawGlobeFace(i, normalFaces[i]));
+                //Parallel.For(0, 6, i => faces[i] = DrawGlobeFace(i, normalFaces[i]));
 
                 _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
 
@@ -103,7 +103,8 @@ namespace WorldGenerator
         private byte[] WriteColourMap(Vector4[] normals, FaceGeometry geometry)
         {
             byte[] colourBuffer = new byte[_cubeTexSize * _cubeTexSize * 4];
-            for (int y = 0; y < _cubeTexSize; y++)
+            //for (int y = 0; y < _cubeTexSize; y++)
+            Parallel.For(0, _cubeTexSize, y =>
             {
                 for (int x = 0; x < _cubeTexSize; x++)
                 {
@@ -122,7 +123,7 @@ namespace WorldGenerator
                     colourBuffer[baseIndex + 2] = colour.B;
                     colourBuffer[baseIndex + 3] = 255;
                 }
-            }
+            });
             return colourBuffer;
         }
 
