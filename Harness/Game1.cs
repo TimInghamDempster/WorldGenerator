@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace WorldGenerator
 {
+    public enum RenderMode
+    {
+        Perspective,
+        Section
+    }
+
     public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
@@ -33,6 +39,10 @@ namespace WorldGenerator
 
         private int _frameCount = -1;
 
+        private RenderMode _renderMode = RenderMode.Section;
+
+        private Texture2D? _sectionTexture;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -56,6 +66,8 @@ namespace WorldGenerator
             _worldEffect.CurrentTechnique = _worldEffect.Techniques[0];
             _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
             _normalTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Vector4);
+
+            _sectionTexture = new Texture2D(GraphicsDevice, 640, 360);
 
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
@@ -183,24 +195,63 @@ namespace WorldGenerator
         protected override void Draw(GameTime gameTime)
         {
             _frameCount++;
-            DrawGlobeTexture();
 
             GraphicsDevice.Clear(Color.Black);
 
-            _zoomFactor = 500 - Mouse.GetState().ScrollWheelValue / 10.0f;
+            var cameraLoc = AimCamera();
 
-            var cameraLoc = new Vector3(0.0f, 0.0f, _zoomFactor / 200.0f);
+            Action<Vector3> renderFunc = _renderMode switch
+            {
+                RenderMode.Perspective => DrawPerspective,
+                RenderMode.Section => DrawSection,
+                _ => throw new NotImplementedException(),
+            };
 
-            var mousePosY = (Mouse.GetState().Y - (_height * 0.5f)) * _mouseSensitivity;
-            mousePosY = MathF.Min(2.0f, MathF.Max(-2.0f, mousePosY));
+            renderFunc(cameraLoc);
 
-            var xRot = Matrix.CreateRotationX(mousePosY);
-            cameraLoc = Vector3.Transform(cameraLoc, xRot);
+            base.Draw(gameTime);
+        }
 
-            var yRot = Matrix.CreateRotationY(Mouse.GetState().X * _mouseSensitivity);
-            cameraLoc = Vector3.Transform(cameraLoc, yRot);
+        private void DrawSection(Vector3 obj)
+        {
+            var width = _sectionTexture?.Width ?? 10;
+            var height = _sectionTexture?.Height ?? 10;
+            var data = new Color[width * height];
 
+            var aspectRatio = 16f / 9f;
+            var scale = _zoomFactor / _initialZoom;
+
+            for (int dy = 0; dy < height; dy++)
+            {
+                for (int dx = 0; dx < width; dx++)
+                {
+                    var col = _visualiser.GetColour(
+                        new(
+                            new(
+                                ((dx / (float)(width /  2)) - 1f) * aspectRatio * scale, 
+                                (dy / ((float)height / 2) - 1f) * scale, 
+                                0.0f), 
+                            Unit.None), 
+                        _field);
+
+                    data[dx + dy * width] = col;
+                }
+            }
+
+            _sectionTexture?.SetData(data);
+
+            _spriteBatch?.Begin();
+
+            _spriteBatch?.Draw(_sectionTexture, new Rectangle(0, 0, 1920, 1080), Color.White);
+
+            _spriteBatch?.End();
+        }
+
+        private void DrawPerspective(Vector3 cameraLoc)
+        {
             _view = Matrix.CreateLookAt(cameraLoc, Vector3.Zero, Vector3.UnitY);
+
+            DrawGlobeTexture();
 
             var wvp = _world * _view * _projection;
 
@@ -227,8 +278,23 @@ namespace WorldGenerator
                 pass.Apply();
                 GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cube?.Faces.Count ?? 0);
             }
+        }
 
-            base.Draw(gameTime);
+        private Vector3 AimCamera()
+        {
+            _zoomFactor = 500 - Mouse.GetState().ScrollWheelValue / 10.0f;
+
+            var cameraLoc = new Vector3(0.0f, 0.0f, _zoomFactor / 200.0f);
+
+            var mousePosY = (Mouse.GetState().Y - (_height * 0.5f)) * _mouseSensitivity;
+            mousePosY = MathF.Min(2.0f, MathF.Max(-2.0f, mousePosY));
+
+            var xRot = Matrix.CreateRotationX(mousePosY);
+            cameraLoc = Vector3.Transform(cameraLoc, xRot);
+
+            var yRot = Matrix.CreateRotationY(Mouse.GetState().X * _mouseSensitivity);
+            cameraLoc = Vector3.Transform(cameraLoc, yRot);
+            return cameraLoc;
         }
     }
 }
