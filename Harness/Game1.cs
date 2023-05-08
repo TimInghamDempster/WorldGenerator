@@ -34,8 +34,8 @@ namespace WorldGenerator
         private int _height;
 
         private readonly IManifold _manifold;
-        private readonly DistToNearestPointField _field;
-        private readonly DistToGrayscaleVisualiser _visualiser = new();
+        private readonly BouyancyField _field;
+        private readonly Vector3Visualiser _visualiser = new();
 
         private int _frameCount = -1;
 
@@ -51,7 +51,7 @@ namespace WorldGenerator
 
             _manifold = new PointCloudManifold(
                 SphereLoader.LoadSphere());
-            _field = new(_manifold);
+            _field = new ();
         }
 
         protected override void Initialize()

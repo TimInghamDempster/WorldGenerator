@@ -17,6 +17,14 @@ namespace WorldGenerator
         }
     }
 
+    public class Vector3Visualiser : IVisualiser<IVectorValued>
+    {
+        public Color GetColour(Position pos, IField<IVectorValued> field)
+        {
+            return new Color(field.Value(pos).Value);
+        }
+    }
+
     public interface IManifold
     {
         IEnumerable<int> Neighbours(int origin);
@@ -66,7 +74,7 @@ namespace WorldGenerator
     }
 
     public interface IFloatField<TValue> : IFloatField, IField<TValue> { }
-    public interface IField<TValue>
+    public interface IField<out TValue>
     {
         TValue Value(Position position);
     }
@@ -82,9 +90,12 @@ namespace WorldGenerator
         Giga
     }
 
-    public record struct Position(Vector3 Value, Unit Unit);
-    public record struct Velocity(Vector3 Value, Unit Unit);
-    public record struct Distance(float Value, Unit Unit);
+    public interface IVectorValued { Vector3 Value { get; } }
+    public interface IFloatValued { float Value { get; } }
+    public record struct Position(Vector3 Value, Unit Unit) : IVectorValued;
+    public record struct Velocity(Vector3 Value, Unit Unit) : IVectorValued;
+    public record struct Distance(float Value, Unit Unit) : IFloatValued;
+    public record struct Bouyancy(Vector3 Value, Unit Unit) : IVectorValued;
 
     public static class FieldOperators
     {
