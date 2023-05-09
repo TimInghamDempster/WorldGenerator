@@ -35,7 +35,7 @@ namespace WorldGenerator
     {
         public Position NearestPoint(Position testLocation)
         {
-            return new(Vector3.UnitX, Unit.None);
+            return new(Vector3.UnitX, new(new List<UnitPart>()));
         }
 
         public IEnumerable<int> Neighbours(int origin)
@@ -80,18 +80,9 @@ namespace WorldGenerator
     }
     public record SimpleField(float[] Values, IManifold Manifold) : IFloatField;
 
-    public enum Unit
-    {
-        None,
-        Deca,
-        Centi,
-        Kilo,
-        Mega,
-        Giga
-    }
 
-    public interface IVectorValued { Vector3 Value { get; } }
-    public interface IFloatValued { float Value { get; } }
+    public interface IVectorValued {Vector3 Value { get; } Unit Unit { get; } }
+    public interface IFloatValued {float Value { get; } Unit Unit { get; } }
     public record struct Position(Vector3 Value, Unit Unit) : IVectorValued;
     public record struct Velocity(Vector3 Value, Unit Unit) : IVectorValued;
     public record struct Distance(float Value, Unit Unit) : IFloatValued;

@@ -12,7 +12,7 @@ namespace WorldGenerator
             while (reader.BaseStream.Position != reader.BaseStream.Length)
             {
                 var pos = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-                points.Add(new(pos, Unit.None));
+                points.Add(new(pos, new(new List<UnitPart>())));
             }
 
             return points;
