@@ -47,7 +47,7 @@ namespace WorldGenerator
                 }
             }
 
-            if (false == candidates.Any()) return new Position(Vector3.Zero, new(new List<UnitPart>()));
+            if (false == candidates.Any()) return new Position(Vector3.Zero);
 
             return
                 candidates.

@@ -17,7 +17,7 @@ namespace WorldGeneratorTests
             var gField = new GravityField(strength);
 
             // Act
-            var result = gField.Value(new(position, new(new List<UnitPart>())));
+            var result = gField.Value(new(position));
 
             // Assert
             result.Value.Should().Be(expected);

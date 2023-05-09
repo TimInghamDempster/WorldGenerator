@@ -16,13 +16,13 @@ namespace WorldGeneratorTests
             var points = new List<Position>();
             for (int i = 0; i < 100; i++)
             {
-                var vec = new Position(RandomVector(random), new(new List<UnitPart>()));
+                var vec = new Position(RandomVector(random));
                 points.Add(vec);
             }
             var manifold = new PointCloudManifold(points);
 
             var closestPoint = points[random.Next(points.Count)];
-            var testPoint = new Position(closestPoint.Value + new Vector3(0.003f, 0.0f, 0.0f), new(new List<UnitPart>()));
+            var testPoint = new Position(closestPoint.Value + new Vector3(0.003f, 0.0f, 0.0f));
 
             // Act
             var returnedPoint = manifold.NearestPoint(testPoint);

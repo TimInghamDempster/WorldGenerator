@@ -36,7 +36,7 @@ namespace WorldGenerator
 
         private readonly IManifold _manifold;
         private readonly BouyancyField _field;
-        private readonly Vector3Visualiser _visualiser = new();
+        private readonly Vector3Visualiser<MNPerKm3> _visualiser = new();
 
         private int _frameCount = -1;
 
@@ -127,7 +127,7 @@ namespace WorldGenerator
                     var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
                     dir = Vector3.Normalize(dir);
 
-                    var colour = _visualiser.GetColour(new(dir, new(new List<UnitPart>())), _field);
+                    var colour = _visualiser.GetColour(new(dir), _field);
 
                     var normalIndex = (x + y * _cubeTexSize);
                     var baseIndex = normalIndex * 4;
@@ -231,8 +231,7 @@ namespace WorldGenerator
                             new(
                                 ((dx / (float)(width /  2)) - 1f) * aspectRatio * scale, 
                                 (dy / ((float)height / 2) - 1f) * scale, 
-                                0.0f), 
-                            new(new List<UnitPart>())), 
+                                0.0f)), 
                         _field);
 
                     data[dx + dy * width] = col;

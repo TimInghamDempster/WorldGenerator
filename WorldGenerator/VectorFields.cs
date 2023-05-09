@@ -17,9 +17,10 @@ namespace WorldGenerator
         }
     }
 
-    public class Vector3Visualiser : IVisualiser<IVectorValued>
+    public class Vector3Visualiser<TUnit> : IVisualiser<IVectorValued<TUnit>>
+        where TUnit : IUnit
     {
-        public Color GetColour(Position pos, IField<IVectorValued> field)
+        public Color GetColour(Position pos, IField<IVectorValued<TUnit>> field)
         {
             return new Color(field.Value(pos).Value);
         }
@@ -35,7 +36,7 @@ namespace WorldGenerator
     {
         public Position NearestPoint(Position testLocation)
         {
-            return new(Vector3.UnitX, new(new List<UnitPart>()));
+            return new(Vector3.UnitX);
         }
 
         public IEnumerable<int> Neighbours(int origin)
@@ -80,13 +81,16 @@ namespace WorldGenerator
     }
     public record SimpleField(float[] Values, IManifold Manifold) : IFloatField;
 
-
-    public interface IVectorValued {Vector3 Value { get; } Unit Unit { get; } }
-    public interface IFloatValued {float Value { get; } Unit Unit { get; } }
-    public record struct Position(Vector3 Value, Unit Unit) : IVectorValued;
-    public record struct Velocity(Vector3 Value, Unit Unit) : IVectorValued;
-    public record struct Distance(float Value, Unit Unit) : IFloatValued;
-    public record struct Bouyancy(Vector3 Value, Unit Unit) : IVectorValued;
+    public interface IUnit { }
+    public interface Mm : IUnit { }
+    public interface MmPerDy : IUnit { }
+    public interface MNPerKm3 : IUnit { }
+    public interface IVectorValued<TUnit> where TUnit : IUnit {Vector3 Value { get; } }
+    public interface IFloatValued<TUnit> where TUnit : IUnit {float Value { get; } }
+    public record struct Position(Vector3 Value) : IVectorValued<Mm>;
+    public record struct Velocity(Vector3 Value) : IVectorValued<MmPerDy>;
+    public record struct Distance(float Value) : IFloatValued<Mm>;
+    public record struct Bouyancy(Vector3 Value) : IVectorValued<MNPerKm3>;
 
     public static class FieldOperators
     {

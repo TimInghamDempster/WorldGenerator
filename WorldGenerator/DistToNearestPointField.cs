@@ -15,7 +15,7 @@ namespace WorldGenerator
         {
             var nearestPos = _manifold.NearestPoint(position);
 
-            return new(Vector3.Distance(position.Value, nearestPos.Value), position.Unit);
+            return new(Vector3.Distance(position.Value, nearestPos.Value));
         }
     }
 }

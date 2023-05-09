@@ -19,7 +19,7 @@
             dir.Normalize();
             dir *= _g_mPerS;
 
-            return new(dir, position.Unit);
+            return new(dir);
         }
     }
 }

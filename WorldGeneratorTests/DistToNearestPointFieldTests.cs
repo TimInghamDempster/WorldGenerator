@@ -12,8 +12,8 @@ namespace WorldGeneratorTests
         public void ReturnsCorrectDistance()
         {
             // Arrange
-            var testPoint = new Position(new Vector3(1, 1, 1), new(new List<UnitPart>()));
-            var nearestPoint = new Position(new Vector3(2, 2, 2), new(new List<UnitPart>()));
+            var testPoint = new Position(new Vector3(1, 1, 1));
+            var nearestPoint = new Position(new Vector3(2, 2, 2));
             var manifold = new Mock<IManifold>();
             manifold.Setup(m => m.NearestPoint(It.IsAny<Position>())).Returns(nearestPoint);
 
