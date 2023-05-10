@@ -1,6 +1,6 @@
 ﻿namespace WorldGenerator
 {
-    public class GravityField : IField<Velocity>
+    public class GravityField : IContinousField<Velocity>
     {
         public float _g_mPerS { get; init; }
 

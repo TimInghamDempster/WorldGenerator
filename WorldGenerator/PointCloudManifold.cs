@@ -2,19 +2,23 @@
 
 namespace WorldGenerator
 {
-    public class PointCloudManifold : IManifold
+    public class PointCloudManifold : IManifold, IDiscreteField<Position>
     {
-        private readonly List<Position> _positions;
+        private readonly Position[] _positions;
         private readonly Dictionary<Int3, List<int>> _positionsHash;
         private const float _quantFactor = 100.0f;
 
-        public PointCloudManifold(List<Position> positions)
+        public Position[] Values => _positions;
+
+        public IManifold Manifold => this;
+
+        public PointCloudManifold(Position[] positions)
         {
             _positions = positions;
 
             _positionsHash = new Dictionary<Int3, List<int>>();
 
-            for(int i = 0; i < _positions.Count; i++)
+            for(int i = 0; i < _positions.Count(); i++)
             {
                 var quantPos = new Int3(_positions[i].Value * _quantFactor);
                 if (false == _positionsHash.ContainsKey(quantPos))
@@ -22,6 +26,21 @@ namespace WorldGenerator
                     _positionsHash.Add(quantPos, new List<int>());
                 }
                 _positionsHash[quantPos].Add(i);
+            }
+        }
+
+        public void EulerIntegrate(IDiscreteField<Velocity> velocityField, IFloatValued<IDy> timestep)
+        {
+            if(velocityField.Manifold != this)
+            {
+                throw new InvalidOperationException("Cannot integrate position from a velocity field" +
+                    "with a different manifold");
+            }
+
+            for(int i = 0; i < _positions.Length; i++)
+            {
+                _positions[i] = _positions[i] with 
+                { Value = _positions[i].Value + velocityField.Values[i].Value * timestep.Value};
             }
         }
 
@@ -57,6 +76,11 @@ namespace WorldGenerator
         }
 
         public IEnumerable<int> Neighbours(int origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Position Value(Position position)
         {
             throw new NotImplementedException();
         }

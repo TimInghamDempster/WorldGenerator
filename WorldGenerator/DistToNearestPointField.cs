@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class DistToNearestPointField : IField<Distance>
+    public class DistToNearestPointField : IContinousField<Distance>
     {
         private readonly IManifold _manifold;
 

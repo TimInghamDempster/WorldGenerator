@@ -51,7 +51,7 @@ namespace WorldGenerator
             IsMouseVisible = true;
 
             _manifold = new PointCloudManifold(
-                SphereLoader.LoadSphere());
+                SphereLoader.LoadSphere().ToArray());
             _field = new ();
         }
 
