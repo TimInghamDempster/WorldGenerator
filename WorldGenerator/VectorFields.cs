@@ -69,7 +69,7 @@ namespace WorldGenerator
     }
 
 
-    public interface IDiscreteField<TValue>
+    public interface IDiscreteField<out TValue>
     {
         TValue[] Values { get; }
         IManifold Manifold { get; }
@@ -85,7 +85,8 @@ namespace WorldGenerator
     public record struct Position(Vector3 Value) : IVectorValued<Mm>;
     public record struct Velocity(Vector3 Value) : IVectorValued<MmPerDy>;
     public record struct Distance(float Value) : IFloatValued<Mm>;
-    public record struct Bouyancy(Vector3 Value) : IVectorValued<MNPerKm3>;
+    public record struct Density(float Value) : IFloatValued<GTPerKm3>;
+    public record struct DensityChange(float Value) : IFloatValued<GTPerKm3PerDy>;
     public record struct Time(float Value) : IFloatValued<IDy>;
 
     public static class FieldOperators

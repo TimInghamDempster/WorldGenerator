@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -35,8 +34,8 @@ namespace WorldGenerator
         private int _height;
 
         private readonly IManifold _manifold;
-        private readonly BouyancyField _field;
-        private readonly Vector3Visualiser<MNPerKm3> _visualiser = new();
+        private readonly DistToNearestPointField _field;
+        private readonly DistToGrayscaleVisualiser _visualiser = new();
 
         private int _frameCount = -1;
 
@@ -52,7 +51,7 @@ namespace WorldGenerator
 
             _manifold = new PointCloudManifold(
                 SphereLoader.LoadSphere().ToArray());
-            _field = new ();
+            _field = new (_manifold);
         }
 
         protected override void Initialize()
