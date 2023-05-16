@@ -76,7 +76,8 @@ namespace WorldGenerator
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
 
-            _cube = Mesh.Cube(GraphicsDevice, 1.1f);
+            //_cube = Mesh.Cube(GraphicsDevice, 1.1f);
+            _cube = Mesh.Geodesic(GraphicsDevice, 1.0f, 10000);
 
             base.Initialize();
         }

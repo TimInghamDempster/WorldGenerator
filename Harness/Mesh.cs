@@ -26,14 +26,14 @@ namespace WorldGenerator
         internal VertexBuffer VertexBuffer { get; }
         internal IndexBuffer IndexBuffer { get; }
 
-        internal Mesh(IReadOnlyList<Face> faces, IReadOnlyList<Vector3> vertices, GraphicsDevice graphicsDevice, Func<Vector3, float> altitude)
+        internal Mesh(IReadOnlyList<Face> faces, IReadOnlyList<Vector3> vertices, GraphicsDevice graphicsDevice)
         {
             Faces = faces;
             Vertices = vertices;
 
             var vertexBuffer = new VertexBuffer(graphicsDevice, typeof(PositionColorTex3Vertex), vertices.Count, BufferUsage.WriteOnly);
             vertexBuffer.SetData(vertices.Select(
-                v => new PositionColorTex3Vertex(v, Color.White, new Vector3(altitude(v), 0.0f, 0.0f))).ToArray());
+                v => new PositionColorTex3Vertex(v, Color.White, new Vector3(0.0f, 0.0f, 0.0f))).ToArray());
             VertexBuffer = vertexBuffer;
 
             var indexBuffer = new IndexBuffer(graphicsDevice, typeof(int), faces.Count * 3, BufferUsage.WriteOnly);
@@ -72,7 +72,7 @@ namespace WorldGenerator
             faces.Add(new(1, 3, 5));
             faces.Add(new(7, 5, 3));
 
-            return new Mesh(faces, verts, graphicsDevice, v => 0.0f);
+            return new Mesh(faces, verts, graphicsDevice);
         }
 
         enum FaceType
@@ -116,7 +116,7 @@ namespace WorldGenerator
                 }
             }
 
-            return new Mesh(faces, verts, graphicsDevice, altitude);
+            return new Mesh(faces, verts, graphicsDevice);
         }
 
         private static void BuildCubeFaceVerts(List<Vector3> verts, int halfRes, Matrix rot)
@@ -172,6 +172,112 @@ namespace WorldGenerator
                     verts.Add(rv);
                 }
             }
+        }
+
+        internal static Mesh? Geodesic(GraphicsDevice graphicsDevice, float radius, int minFaces)
+        {
+            var icosahedron = Icosahedron(graphicsDevice, radius);
+
+            var verts = new List<Vector3>(icosahedron.Vertices);
+            var faces = new List<Face>(icosahedron.Faces);
+
+            faces = Subdivide(faces, verts, minFaces);
+
+            return new Mesh(faces, verts, graphicsDevice);
+        }
+
+        private static List<Face> Subdivide(List<Face> faces, List<Vector3> verts, int minFaces)
+        {
+            while(faces.Count < minFaces)
+            {
+                var newFaces = new List<Face>();
+                foreach(var face in faces)
+                {
+                    var i0 = face.Index1;
+                    var i1 = face.Index2;
+                    var i2 = face.Index3;
+                    var v0 = verts[i0];
+                    var v1 = verts[i1];
+                    var v2 = verts[i2];
+
+                    var v20 = (v2 + v0) / 2.0f;
+                    var v01 = (v0 + v1) / 2.0f;
+                    var v12 = (v1 + v2) / 2.0f;
+                    var i20 = verts.Count + 0;
+                    var i01 = verts.Count + 1;
+                    var i12 = verts.Count + 2;
+                    verts.Add(v20);
+                    verts.Add(v01);
+                    verts.Add(v12);
+
+                    newFaces.Add(new(i0, i01, i20));
+                    newFaces.Add(new(i1, i12, i01));
+                    newFaces.Add(new(i2, i20, i12));
+                    newFaces.Add(new(i2, i20, i12));
+                    newFaces.Add(new(i12, i20, i01));
+                }
+
+                for (int i = 0; i < verts.Count; i++)
+                {
+                    verts[i] = Vector3.Normalize(verts[i]);
+                }
+
+                faces = newFaces;
+            }
+
+            return faces;
+        }
+
+        private static Mesh Icosahedron(GraphicsDevice graphicsDevice, float radius)
+        {
+            float phi = (1.0f + MathF.Sqrt(5.0f)) * 0.5f; // golden ratio
+            float a = 1.0f;
+            float b = 1.0f / phi;
+
+            // add vertices
+            var verts = new List<Vector3>();
+            verts.Add(new (0, b, -a));
+            verts.Add(new (b, a, 0));
+            verts.Add(new (-b, a, 0));
+            verts.Add(new (0, b, a));
+            verts.Add(new (0, -b, a));
+            verts.Add(new (-a, 0, b));
+            verts.Add(new (0, -b, -a));
+            verts.Add(new (a, 0, -b));
+            verts.Add(new (a, 0, b));
+            verts.Add(new (-a, 0, -b));
+            verts.Add(new (b, -a, 0));
+            verts.Add(new (-b, -a, 0));
+
+            for(int i = 0; i < verts.Count; i++)
+            {
+                verts[i] = Vector3.Normalize(verts[i]);
+            }
+
+            // add triangles
+            var faces = new List<Face>();
+            faces.Add(new (2, 1, 0));
+            faces.Add(new (1, 2, 3));
+            faces.Add(new (5, 4, 3));
+            faces.Add(new (4, 8, 3));
+            faces.Add(new (7, 6, 0));
+            faces.Add(new (6, 9, 0));
+            faces.Add(new (11, 10, 4));
+            faces.Add(new (10, 11, 6));
+            faces.Add(new (9, 5, 2));
+            faces.Add(new (5, 9, 11));
+            faces.Add(new (8, 7, 1));
+            faces.Add(new (7, 8, 10));
+            faces.Add(new (2, 5, 3));
+            faces.Add(new (8, 1, 3));
+            faces.Add(new (9, 2, 0));
+            faces.Add(new (1, 7, 0));
+            faces.Add(new (11, 9, 6));
+            faces.Add(new (7, 10, 6));
+            faces.Add(new (5, 11, 4));
+            faces.Add(new (10, 8, 4));
+
+            return new Mesh(faces, verts, graphicsDevice);
         }
     }
 }
