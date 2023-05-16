@@ -45,7 +45,7 @@ namespace WorldGeneratorTests
             var velocities = new SimpleField<Velocity>(new Velocity[1], manifold2);
 
             // Act
-            manifold.EulerIntegrate(velocities, new Time(1));
+            manifold.ProgressTime(velocities, new Time(1));
         }
 
         [TestMethod]
@@ -66,18 +66,18 @@ namespace WorldGeneratorTests
 
             var manifold = new PointCloudManifold(points);
 
-            var velocities = new SimpleField<Velocity>(
-                new Velocity[1] { new(vel) },
-                manifold);
+            var velocities = new VelocityField(
+                manifold,
+                new Velocity[1] { new(vel) });
 
             // Act
             for (int i = 0; i < timestepCount; i++)
             {
-                manifold.EulerIntegrate(velocities, new Time(timestep));
+                manifold.ProgressTime(velocities, new Time(timestep));
             }
 
             // Assert
-            var delta = (manifold.Values[0].Value - endPos);
+            var delta = (manifold.Values(0).Value - endPos);
             delta.Length().Should().BeLessThan(endPos.Length() / 100.0f);
         }
     }

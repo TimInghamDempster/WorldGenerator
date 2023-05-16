@@ -14,7 +14,7 @@ namespace WorldGeneratorTests
         public void GravityWorks(Vector3 position, Vector3 expected, float strength)
         {
             // Arrange
-            var gField = new GravityField(strength);
+            var gField = new GravityField(strength, new TempManifold());
 
             // Act
             var result = gField.Value(new(position));

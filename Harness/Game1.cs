@@ -36,6 +36,8 @@ namespace WorldGenerator
         private readonly IManifold _manifold;
         private readonly DistToNearestPointField _field;
         private readonly DistToGrayscaleVisualiser _visualiser = new();
+        private readonly VelocityField _velocity;
+        private readonly GravityField _gravity;
 
         private int _frameCount = -1;
 
@@ -52,6 +54,8 @@ namespace WorldGenerator
             _manifold = new PointCloudManifold(
                 SphereLoader.LoadSphere().ToArray());
             _field = new (_manifold);
+            _gravity = new(0.0001f, _manifold);
+            _velocity = new(_manifold, new Velocity[_manifold.ValueCount]);
         }
 
         protected override void Initialize()
@@ -188,6 +192,11 @@ namespace WorldGenerator
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            var timestep = new Time(1);
+
+            _velocity.ProgressTime(timestep, _gravity);
+            _manifold.ProgressTime(_velocity, timestep);
 
             base.Update(gameTime);
         }

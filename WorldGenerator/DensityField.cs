@@ -17,7 +17,7 @@ namespace WorldGenerator
 
         public IManifold Manifold => _manifold;
 
-        public Density[] Values => _values;
+        public int ValueCount => _values.Length;
 
         public void ProgressTime(Time time)
         {
@@ -31,5 +31,6 @@ namespace WorldGenerator
         public Density Value(Position position) =>
             throw new NotImplementedException();
 
+        public Density Values(int index) => _values[index];
     }
 }

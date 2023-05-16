@@ -21,7 +21,7 @@ namespace WorldGeneratorTests
             densityFieid.ProgressTime(new Time(10.0f));
 
             // Assert
-            densityFieid.Values[0].Value.Should().Be(1.0f);
+            densityFieid.Values(0).Value.Should().Be(1.0f);
         }
     }
 }

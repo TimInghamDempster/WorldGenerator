@@ -1,15 +1,21 @@
 ﻿namespace WorldGenerator
 {
-    public class GravityField : IContinousField<Velocity>
+    public class GravityField : IContinousField<Force>, IDiscreteField<Force>
     {
-        public float _g_mPerS { get; init; }
+        public float _TN { get; init; }
 
-        public GravityField(float g_mPerS)
+
+        public IManifold Manifold { get; init; }
+
+        public int ValueCount => throw new NotImplementedException();
+
+        public GravityField(float TN, IManifold manifold)
         {
-            _g_mPerS = g_mPerS;
+            _TN = TN;
+            Manifold = manifold;
         }
 
-        public Velocity Value(Position position)
+        public Force Value(Position position)
         {
             var dir = position.Value;
             
@@ -17,9 +23,11 @@
             dir *= -1.0f;
 
             dir.Normalize();
-            dir *= _g_mPerS;
+            dir *= _TN;
 
             return new(dir);
         }
+
+        public Force Values(int index) => Value(Manifold.Values(index));
     }
 }

@@ -2,23 +2,28 @@
 
 namespace WorldGenerator
 {
-    public class PointCloudManifold : IManifold, IDiscreteField<Position>
+    public class PointCloudManifold : IManifold
     {
         private readonly Position[] _positions;
         private readonly Dictionary<Int3, List<int>> _positionsHash;
         private const float _quantFactor = 100.0f;
 
-        public Position[] Values => _positions;
-
         public IManifold Manifold => this;
+
+        public int ValueCount => _positions.Length;
 
         public PointCloudManifold(Position[] positions)
         {
             _positions = positions;
 
             _positionsHash = new Dictionary<Int3, List<int>>();
+            BuildHash();
+        }
 
-            for(int i = 0; i < _positions.Count(); i++)
+        private void BuildHash()
+        {
+            _positionsHash.Clear();
+            for (int i = 0; i < _positions.Count(); i++)
             {
                 var quantPos = new Int3(_positions[i].Value * _quantFactor);
                 if (false == _positionsHash.ContainsKey(quantPos))
@@ -29,7 +34,7 @@ namespace WorldGenerator
             }
         }
 
-        public void EulerIntegrate(IDiscreteField<Velocity> velocityField, IFloatValued<IDy> timestep)
+        public void ProgressTime(IDiscreteField<Velocity> velocityField, Time timestep)
         {
             if(velocityField.Manifold != this)
             {
@@ -40,8 +45,9 @@ namespace WorldGenerator
             for(int i = 0; i < _positions.Length; i++)
             {
                 _positions[i] = _positions[i] with 
-                { Value = _positions[i].Value + velocityField.Values[i].Value * timestep.Value};
+                { Value = _positions[i].Value + velocityField.Values(i).Value * timestep.Value};
             }
+            BuildHash();
         }
 
         public Position NearestPoint(Position testLocation)
@@ -84,5 +90,7 @@ namespace WorldGenerator
         {
             throw new NotImplementedException();
         }
+
+        public Position Values(int index) => _positions[index];
     }
 }

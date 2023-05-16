@@ -26,20 +26,35 @@ namespace WorldGenerator
         }
     }
 
-    public interface IManifold
+    public interface IManifold : IDiscreteField<Position>
     {
         IEnumerable<int> Neighbours(int origin);
         Position NearestPoint(Position testLocation);
+        void ProgressTime(IDiscreteField<Velocity> velocityField, Time timestep);
     }
 
     public class TempManifold : IManifold
     {
+        public IManifold Manifold => throw new NotImplementedException();
+
+        public int ValueCount => throw new NotImplementedException();
+
         public Position NearestPoint(Position testLocation)
         {
             return new(Vector3.UnitX);
         }
 
         public IEnumerable<int> Neighbours(int origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ProgressTime(IDiscreteField<Velocity> velocityField, Time timestep)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Position Values(int index)
         {
             throw new NotImplementedException();
         }
@@ -54,6 +69,10 @@ namespace WorldGenerator
             _length = length;
         }
 
+        public IManifold Manifold => throw new NotImplementedException();
+
+        public int ValueCount => throw new NotImplementedException();
+
         public Position NearestPoint(Position testLocation)
         {
             throw new NotImplementedException();
@@ -66,34 +85,40 @@ namespace WorldGenerator
                 int i when i == _length - 1  => new int[] { _length - 2 },
                 _ => new int[] { origin - 1, origin + 1 }
             };
-    }
 
+        public void ProgressTime(IDiscreteField<Velocity> velocityField, Time timestep)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Position Values(int index)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public interface IDiscreteField<out TValue>
     {
-        TValue[] Values { get; }
+        TValue Values(int index);
+        int ValueCount { get; }
         IManifold Manifold { get; }
     }
     public interface IContinousField<out TValue>
     {
         TValue Value(Position position);
     }
-    public record SimpleField<TValue>(TValue[] Values, IManifold Manifold) : IDiscreteField<TValue>;
+    public record SimpleField<TValue>(TValue[] Values, IManifold Manifold) : IDiscreteField<TValue>
+    {
+        public int ValueCount => Values.Length;
 
-    public interface IVectorValued<TUnit> where TUnit : IUnit {Vector3 Value { get; } }
-    public interface IFloatValued<TUnit> where TUnit : IUnit {float Value { get; } }
-    public record struct Position(Vector3 Value) : IVectorValued<Mm>;
-    public record struct Velocity(Vector3 Value) : IVectorValued<MmPerDy>;
-    public record struct Distance(float Value) : IFloatValued<Mm>;
-    public record struct Density(float Value) : IFloatValued<GTPerKm3>;
-    public record struct DensityChange(float Value) : IFloatValued<GTPerKm3PerDy>;
-    public record struct Time(float Value) : IFloatValued<IDy>;
+        TValue IDiscreteField<TValue>.Values(int index) => Values[index];
+    }
 
     public static class FieldOperators
     {
         public static SimpleField<float> DiffuseSimple(IDiscreteField<float> initialField)
         {
-            var newVals = new float[initialField.Values.Count()];
+            var newVals = new float[initialField.ValueCount];
 
             for(int i = 0; i < newVals.Count(); i++)
             {
@@ -101,8 +126,8 @@ namespace WorldGenerator
                 var distributedToNeighbours = 0.1f * neighbours.Count();
 
                 newVals[i] =
-                    initialField.Values[i] * (1.0f - distributedToNeighbours) +
-                    neighbours.Select(n => initialField.Values[n]).Sum() * 0.1f;
+                    initialField.Values(i) * (1.0f - distributedToNeighbours) +
+                    neighbours.Select(n => initialField.Values(n)).Sum() * 0.1f;
             }
 
             return new(newVals, initialField.Manifold);
