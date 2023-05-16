@@ -63,6 +63,13 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 
 	return output;
 }
+PixelShaderOutput SimplePS(VertexShaderOutput input)
+{
+	PixelShaderOutput output = (PixelShaderOutput)0;
+	output.Color = 1.0f;
+
+	return output;
+}
 
 PixelShaderOutput MainPS(VertexShaderOutput input)
 {
@@ -94,6 +101,14 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
 }
 
 technique BasicColorDrawing
+{
+	pass P0
+	{
+		VertexShader = compile VS_SHADERMODEL MainVS();
+		PixelShader = compile PS_SHADERMODEL SimplePS();
+	}
+}
+technique Raytrace
 {
 	pass P0
 	{

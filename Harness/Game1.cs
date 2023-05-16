@@ -41,7 +41,7 @@ namespace WorldGenerator
 
         private int _frameCount = -1;
 
-        private RenderMode _renderMode = RenderMode.Section;
+        private RenderMode _renderMode = RenderMode.Perspective;
 
         private Texture2D? _sectionTexture;
 
@@ -265,7 +265,7 @@ namespace WorldGenerator
 
             _worldEffect?.Parameters["WorldViewProjection"].SetValue(wvp);
             _worldEffect?.Parameters["CameraPos"].SetValue(cameraLoc);
-            _worldEffect?.Parameters["GlobeTexture"].SetValue(_globeTexture);
+            //_worldEffect?.Parameters["GlobeTexture"].SetValue(_globeTexture);
             // _worldEffect.Parameters["NormalTexture"].SetValue(_normalTexture);
 
             GraphicsDevice.SetVertexBuffer(_cube?.VertexBuffer);
@@ -278,7 +278,7 @@ namespace WorldGenerator
                 CullMode = CullMode.CullClockwiseFace
             };
 
-            rasterizerState.FillMode = FillMode.Solid;
+            rasterizerState.FillMode = FillMode.WireFrame;
             GraphicsDevice.RasterizerState = rasterizerState;
 
             foreach (EffectPass pass in _worldEffect?.CurrentTechnique.Passes ?? Enumerable.Empty<EffectPass>())
