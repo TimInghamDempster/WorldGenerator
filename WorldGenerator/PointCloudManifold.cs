@@ -47,7 +47,6 @@ namespace WorldGenerator
                 _positions[i] = _positions[i] with 
                 { Value = _positions[i].Value + velocityField.Values(i).Value * timestep.Value};
             }
-            BuildHash();
         }
 
         public Position NearestPoint(Position testLocation)

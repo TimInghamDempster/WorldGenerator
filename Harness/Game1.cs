@@ -197,8 +197,8 @@ namespace WorldGenerator
 
             var timestep = new Time(1);
 
-            //_velocity.ProgressTime(timestep, _gravity);
-            //_manifold.ProgressTime(_velocity, timestep);
+            _velocity.ProgressTime(timestep, _gravity);
+            _manifold.ProgressTime(_velocity, timestep);
 
             base.Update(gameTime);
         }
@@ -264,8 +264,6 @@ namespace WorldGenerator
             //DrawGlobeTexture();
 
             var wvp = _world * _view * _projection;
-
-            //_cube = new RenderMesh(_cube.Faces, _cube.Vertices, _graphics.GraphicsDevice);
 
             _worldEffect?.Parameters["WorldViewProjection"].SetValue(wvp);
             _worldEffect?.Parameters["CameraPos"].SetValue(cameraLoc);
