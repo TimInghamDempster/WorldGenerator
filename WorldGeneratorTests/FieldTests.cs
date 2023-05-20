@@ -14,7 +14,7 @@ namespace WorldGeneratorTests
             var random = new Random();
             var testVal = (float)random.NextDouble() * 100000.0f;
             initialData[0] = testVal;
-            var initialField = new SimpleField<float>(
+            var initialField = new SimpleField<Mm ,float>(
                 initialData,
                 new EuclideanManifold1d(initialData.Length));
 

@@ -1,20 +1,22 @@
-﻿namespace WorldGenerator
+﻿using Microsoft.Xna.Framework;
+
+namespace WorldGenerator
 {
-    public class VelocityField : IDiscreteField<Velocity>
+    public class VelocityField : IDiscreteField<MmPerKy, Vector3>
     {
-        private readonly Velocity[] _values;
+        private readonly Vector3[] _values;
 
         public IManifold Manifold { get; init; }
 
         public int ValueCount => _values.Length;
 
-        public VelocityField(IManifold manifold, Velocity[] values)
+        public VelocityField(IManifold manifold, Vector3[] values)
         {
             Manifold = manifold;
             _values = values;
         }
 
-        public void ProgressTime(Time timestep, IDiscreteField<Force> forces)
+        public void ProgressTime(Time timestep, IDiscreteField<TN, Vector3> forces)
         {
             if (forces.Manifold != Manifold)
             {
@@ -24,10 +26,10 @@
 
             for (int i = 0; i < _values.Length; i++)
             {
-                _values[i] = new(_values[i].Value + forces.Values(i).Value * timestep.Value);
+                _values[i] = _values[i] + forces.Values(i) * timestep.Value;
             }
         }
 
-        public Velocity Values(int index) => _values[index];
+        public Vector3 Values(int index) => _values[index];
     }
 }

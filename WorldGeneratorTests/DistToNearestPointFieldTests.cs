@@ -12,10 +12,10 @@ namespace WorldGeneratorTests
         public void ReturnsCorrectDistance()
         {
             // Arrange
-            var testPoint = new Position(new Vector3(1, 1, 1));
-            var nearestPoint = new Position(new Vector3(2, 2, 2));
+            var testPoint = new Vector3(1, 1, 1);
+            var nearestPoint = new Vector3(2, 2, 2);
             var manifold = new Mock<IManifold>();
-            manifold.Setup(m => m.NearestPoint(It.IsAny<Position>())).Returns(nearestPoint);
+            manifold.Setup(m => m.NearestPoint(It.IsAny<Vector3>())).Returns(nearestPoint);
 
             var distField = new DistToNearestPointField(manifold.Object);
 
@@ -23,7 +23,7 @@ namespace WorldGeneratorTests
             var dist = distField.Value(testPoint);
 
             // Assert
-            dist.Value.Should().Be(MathF.Sqrt(3));
+            dist.Should().Be(MathF.Sqrt(3));
         }
     }
 }

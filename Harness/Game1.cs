@@ -53,10 +53,10 @@ namespace WorldGenerator
 
             _geodesic = Mesh.Geodesic(1.0f, 100000);
 
-            _manifold = new PointCloudManifold(_geodesic.Vertices.Select(v => new Position(v)).ToArray());
+            _manifold = new PointCloudManifold(_geodesic.Vertices.ToArray());
             _field = new(_manifold);
             _gravity = new(0.0001f, _manifold);
-            _velocity = new(_manifold, new Velocity[_manifold.ValueCount]);
+            _velocity = new(_manifold, new Vector3[_manifold.ValueCount]);
 
         }
 
@@ -132,7 +132,7 @@ namespace WorldGenerator
                     var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
                     dir = Vector3.Normalize(dir);
 
-                    var colour = _visualiser.GetColour(new(dir), _field);
+                    var colour = _visualiser.GetColour(dir, _field);
 
                     var normalIndex = (x + y * _cubeTexSize);
                     var baseIndex = normalIndex * 4;
@@ -237,11 +237,9 @@ namespace WorldGenerator
                 for (int dx = 0; dx < width; dx++)
                 {
                     var col = _visualiser.GetColour(
-                        new(
-                            new(
-                                ((dx / (float)(width /  2)) - 1f) * aspectRatio * scale, 
-                                (dy / ((float)height / 2) - 1f) * scale, 
-                                0.0f)), 
+                        new(((dx / (float)(width /  2)) - 1f) * aspectRatio * scale, 
+                            (dy / ((float)height / 2) - 1f) * scale, 
+                            0.0f), 
                         _field);
 
                     data[dx + dy * width] = col;

@@ -4,7 +4,7 @@ namespace WorldGenerator
 {
     public class PointCloudManifold : IManifold
     {
-        private readonly Position[] _positions;
+        private readonly Vector3[] _positions;
         private readonly Dictionary<Int3, List<int>> _positionsHash;
         private const float _quantFactor = 100.0f;
 
@@ -12,7 +12,7 @@ namespace WorldGenerator
 
         public int ValueCount => _positions.Length;
 
-        public PointCloudManifold(Position[] positions)
+        public PointCloudManifold(Vector3[] positions)
         {
             _positions = positions;
 
@@ -25,7 +25,7 @@ namespace WorldGenerator
             _positionsHash.Clear();
             for (int i = 0; i < _positions.Count(); i++)
             {
-                var quantPos = new Int3(_positions[i].Value * _quantFactor);
+                var quantPos = new Int3(_positions[i] * _quantFactor);
                 if (false == _positionsHash.ContainsKey(quantPos))
                 {
                     _positionsHash.Add(quantPos, new List<int>());
@@ -34,7 +34,7 @@ namespace WorldGenerator
             }
         }
 
-        public void ProgressTime(IDiscreteField<Velocity> velocityField, Time timestep)
+        public void ProgressTime(IDiscreteField<MmPerKy, Vector3> velocityField, Time timestep)
         {
             if(velocityField.Manifold != this)
             {
@@ -44,14 +44,13 @@ namespace WorldGenerator
 
             for(int i = 0; i < _positions.Length; i++)
             {
-                _positions[i] = _positions[i] with 
-                { Value = _positions[i].Value + velocityField.Values(i).Value * timestep.Value};
+                _positions[i] = _positions[i] + velocityField.Values(i) * timestep.Value;
             }
         }
 
-        public Position NearestPoint(Position testLocation)
+        public Vector3 NearestPoint(Vector3 testLocation)
         {
-            var quantPos = new Int3(testLocation.Value * _quantFactor);
+            var quantPos = new Int3(testLocation * _quantFactor);
 
             var candidates = new List<int>();
             for(int dz = -1; dz < 2; dz++)
@@ -71,12 +70,12 @@ namespace WorldGenerator
                 }
             }
 
-            if (false == candidates.Any()) return new Position(Vector3.Zero);
+            if (false == candidates.Any()) return Vector3.Zero;
 
             return
                 candidates.
                 Select(c => _positions[c]).
-                OrderBy(p => Vector3.Distance(p.Value, testLocation.Value)).
+                OrderBy(p => Vector3.Distance(p, testLocation)).
                 First();
         }
 
@@ -85,11 +84,11 @@ namespace WorldGenerator
             throw new NotImplementedException();
         }
 
-        public Position Value(Position position)
+        public Vector3 Value(Vector3 position)
         {
             throw new NotImplementedException();
         }
 
-        public Position Values(int index) => _positions[index];
+        public Vector3 Values(int index) => _positions[index];
     }
 }

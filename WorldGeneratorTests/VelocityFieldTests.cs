@@ -15,22 +15,22 @@ namespace WorldGeneratorTests
         public void IntegrateRejectsOtherManifold()
         {
             // Arrange
-            var points = new Position[1];
+            var points = new Vector3[1];
             var manifold = new PointCloudManifold(points);
             var manifold2 = new PointCloudManifold(points);
 
-            var forces = new SimpleField<Force>(
-                new Force[1] { new(Vector3.Zero) },
+            var forces = new SimpleField<TN, Vector3>(
+                new Vector3[1] { Vector3.Zero },
                 manifold);
 
-            var velocities = new VelocityField(manifold2, new Velocity[1] { new(Vector3.Zero) });
+            var velocities = new VelocityField(manifold2, new Vector3[1] { Vector3.Zero });
 
             // Act
             velocities.ProgressTime(new Time(1), forces);
         }
 
         [TestMethod]
-        public void FEqualsMa()
+        public void VEqualsUPlusAT()
         {
             // Arrange
             var random = new Random();
@@ -41,16 +41,16 @@ namespace WorldGeneratorTests
 
             var force = RandomVector(random);
 
-            // S = ut + 1/2at^2, with a = 0
+            // a = f / m, v = u + at
             var endVel= startVel + force * timestepCount * timestep;
 
-            var manifold = new PointCloudManifold(new Position[1] {new Position()});
+            var manifold = new PointCloudManifold(new Vector3[1] {Vector3.Zero});
 
-            var forces = new SimpleField<Force>(
-                new Force[1] { new(force) },
+            var forces = new SimpleField<TN, Vector3>(
+                new Vector3[1] { force },
                 manifold);
 
-            var velocities = new VelocityField(manifold, new Velocity[1] { new(startVel) });
+            var velocities = new VelocityField(manifold, new Vector3[1] { startVel });
 
             // Act
             for (int i = 0; i < timestepCount; i++)
@@ -59,7 +59,7 @@ namespace WorldGeneratorTests
             }
 
             // Assert
-            var delta = (velocities.Values(0).Value - endVel);
+            var delta = (velocities.Values(0) - endVel);
             delta.Length().Should().BeLessThan(endVel.Length() / 100.0f);
         }
     }

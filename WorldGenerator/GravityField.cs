@@ -1,6 +1,8 @@
-﻿namespace WorldGenerator
+﻿using Microsoft.Xna.Framework;
+
+namespace WorldGenerator
 {
-    public class GravityField : IContinousField<Force>, IDiscreteField<Force>
+    public class GravityField : IContinousField<TN, Vector3>, IDiscreteField<TN, Vector3>
     {
         public float _TN { get; init; }
 
@@ -15,9 +17,9 @@
             Manifold = manifold;
         }
 
-        public Force Value(Position position)
+        public Vector3 Value(Vector3 position)
         {
-            var dir = position.Value;
+            var dir = position;
             
             // point towards planet centre
             dir *= -1.0f;
@@ -25,9 +27,9 @@
             dir.Normalize();
             dir *= _TN;
 
-            return new(dir);
+            return dir;
         }
 
-        public Force Values(int index) => Value(Manifold.Values(index));
+        public Vector3 Values(int index) => Value(Manifold.Values(index));
     }
 }

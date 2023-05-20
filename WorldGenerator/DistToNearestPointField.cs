@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class DistToNearestPointField : IContinousField<Distance>
+    public class DistToNearestPointField : IContinousField<Mm, float>
     {
         private readonly IManifold _manifold;
 
@@ -11,11 +11,11 @@ namespace WorldGenerator
             _manifold = manifold;
         }
 
-        public Distance Value(Position position)
+        public float Value(Vector3 position)
         {
             var nearestPos = _manifold.NearestPoint(position);
 
-            return new(Vector3.Distance(position.Value, nearestPos.Value));
+            return Vector3.Distance(position, nearestPos);
         }
     }
 }

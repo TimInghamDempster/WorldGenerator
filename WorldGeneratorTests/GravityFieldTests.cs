@@ -17,10 +17,10 @@ namespace WorldGeneratorTests
             var gField = new GravityField(strength, new TempManifold());
 
             // Act
-            var result = gField.Value(new(position));
+            var result = gField.Value(position);
 
             // Assert
-            result.Value.Should().Be(expected);
+            result.Should().Be(expected);
         }
 
         public static IEnumerable<object[]> GravityExamples

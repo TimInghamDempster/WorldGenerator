@@ -13,15 +13,15 @@ namespace WorldGeneratorTests
             // Arrange
             var random = new Random();
 
-            var points = new Position[100];
+            var points = new Vector3[100];
             for (int i = 0; i < points.Length; i++)
             {
-                points[i] = new Position(RandomVector(random));
+                points[i] = RandomVector(random);
             }
             var manifold = new PointCloudManifold(points);
 
             var closestPoint = points[random.Next(points.Count())];
-            var testPoint = new Position(closestPoint.Value + new Vector3(0.003f, 0.0f, 0.0f));
+            var testPoint = closestPoint + new Vector3(0.003f, 0.0f, 0.0f);
 
             // Act
             var returnedPoint = manifold.NearestPoint(testPoint);
@@ -38,11 +38,11 @@ namespace WorldGeneratorTests
         public void IntegrateRejectsOtherManifold()
         {
             // Arrange
-            var points = new Position[1];
+            var points = new Vector3[1];
             var manifold = new PointCloudManifold(points);
             var manifold2 = new PointCloudManifold(points);
 
-            var velocities = new SimpleField<Velocity>(new Velocity[1], manifold2);
+            var velocities = new SimpleField<MmPerKy, Vector3>(new Vector3[1], manifold2);
 
             // Act
             manifold.ProgressTime(velocities, new Time(1));
@@ -55,7 +55,7 @@ namespace WorldGeneratorTests
             var random = new Random();
 
             var startPos = RandomVector(random);
-            var points = new Position[1] { new(startPos) };
+            var points = new Vector3[1] { startPos };
 
             var vel = RandomVector(random);
             var timestepCount = random.Next(1000);
@@ -68,7 +68,7 @@ namespace WorldGeneratorTests
 
             var velocities = new VelocityField(
                 manifold,
-                new Velocity[1] { new(vel) });
+                new Vector3[1] { vel });
 
             // Act
             for (int i = 0; i < timestepCount; i++)
@@ -77,7 +77,7 @@ namespace WorldGeneratorTests
             }
 
             // Assert
-            var delta = (manifold.Values(0).Value - endPos);
+            var delta = (manifold.Values(0) - endPos);
             delta.Length().Should().BeLessThan(endPos.Length() / 100.0f);
         }
     }

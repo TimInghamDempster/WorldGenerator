@@ -2,13 +2,13 @@
 
 namespace WorldGenerator
 {
-    public class DensityField : IDiscreteField<Density>
+    public class DensityField : IDiscreteField<GTPerKm3, float>
     {
         private readonly IManifold _manifold;
-        private readonly Density[] _values;
+        private readonly float[] _values;
         private readonly DensityChange _densityIncreaseRate;
 
-        public DensityField(IManifold manifold, Density[] values, DensityChange densityIncreaseRate)
+        public DensityField(IManifold manifold, float[] values, DensityChange densityIncreaseRate)
         {
             _manifold = manifold;
             _values = values;
@@ -23,14 +23,13 @@ namespace WorldGenerator
         {
             for(int i = 0; i < _values.Length; i++)
             {
-                _values[i] = new Density(
-                    _values[i].Value + _densityIncreaseRate.Value * time.Value);
+                _values[i] = _values[i] + _densityIncreaseRate.Value * time.Value;
             }
         }
 
-        public Density Value(Position position) =>
+        public float Value(Vector3 position) =>
             throw new NotImplementedException();
 
-        public Density Values(int index) => _values[index];
+        public float Values(int index) => _values[index];
     }
 }
