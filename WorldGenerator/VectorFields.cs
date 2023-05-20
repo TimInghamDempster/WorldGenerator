@@ -39,6 +39,8 @@ namespace WorldGenerator
 
         public int ValueCount => throw new NotImplementedException();
 
+        public IEnumerable<Vector3> Values => throw new NotImplementedException();
+
         public Vector3 NearestPoint(Vector3 testLocation)
         {
             return Vector3.UnitX;
@@ -54,7 +56,7 @@ namespace WorldGenerator
             throw new NotImplementedException();
         }
 
-        public Vector3 Values(int index)
+        public Vector3 Value(int index)
         {
             throw new NotImplementedException();
         }
@@ -72,6 +74,8 @@ namespace WorldGenerator
         public IManifold Manifold => throw new NotImplementedException();
 
         public int ValueCount => throw new NotImplementedException();
+
+        public IEnumerable<Vector3> Values => throw new NotImplementedException();
 
         public Vector3 NearestPoint(Vector3 testLocation)
         {
@@ -91,7 +95,7 @@ namespace WorldGenerator
             throw new NotImplementedException();
         }
 
-        public Vector3 Values(int index)
+        public Vector3 Value(int index)
         {
             throw new NotImplementedException();
         }
@@ -99,19 +103,22 @@ namespace WorldGenerator
 
     public interface IDiscreteField<TUnit, TStorage>
     {
-        TStorage Values(int index);
+        TStorage Value(int index);
         int ValueCount { get; }
         IManifold Manifold { get; }
+        IEnumerable<TStorage> Values { get; }
     }
     public interface IContinousField<TUnit, TStorage>
     {
         TStorage Value(Vector3 position);
     }
-    public record SimpleField<TUnit, TStorage>(TStorage[] Values, IManifold Manifold) : IDiscreteField<TUnit, TStorage>
+    public record SimpleField<TUnit, TStorage>(TStorage[] ValuesArray, IManifold Manifold) : IDiscreteField<TUnit, TStorage>
     {
-        public int ValueCount => Values.Length;
+        public int ValueCount => ValuesArray.Length;
 
-        TStorage IDiscreteField<TUnit, TStorage>.Values(int index) => Values[index];
+        public IEnumerable<TStorage> Values => ValuesArray;
+
+        public TStorage Value(int index) => ValuesArray[index];
     }
 
     public static class FieldOperators
@@ -126,8 +133,8 @@ namespace WorldGenerator
                 var distributedToNeighbours = 0.1f * neighbours.Count();
 
                 newVals[i] =
-                    initialField.Values(i) * (1.0f - distributedToNeighbours) +
-                    neighbours.Select(n => initialField.Values(n)).Sum() * 0.1f;
+                    initialField.Value(i) * (1.0f - distributedToNeighbours) +
+                    neighbours.Select(n => initialField.Value(n)).Sum() * 0.1f;
             }
 
             return new(newVals, initialField.Manifold);

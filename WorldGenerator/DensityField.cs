@@ -19,6 +19,8 @@ namespace WorldGenerator
 
         public int ValueCount => _values.Length;
 
+        public IEnumerable<float> Values => _values;
+
         public void ProgressTime(Time time)
         {
             for(int i = 0; i < _values.Length; i++)
@@ -30,6 +32,6 @@ namespace WorldGenerator
         public float Value(Vector3 position) =>
             throw new NotImplementedException();
 
-        public float Values(int index) => _values[index];
+        public float Value(int index) => _values[index];
     }
 }

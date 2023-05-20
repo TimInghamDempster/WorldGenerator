@@ -59,7 +59,7 @@ namespace WorldGeneratorTests
             }
 
             // Assert
-            var delta = (velocities.Values(0) - endVel);
+            var delta = (velocities.Value(0) - endVel);
             delta.Length().Should().BeLessThan(endVel.Length() / 100.0f);
         }
     }

@@ -77,7 +77,7 @@ namespace WorldGeneratorTests
             }
 
             // Assert
-            var delta = (manifold.Values(0) - endPos);
+            var delta = (manifold.Value(0) - endPos);
             delta.Length().Should().BeLessThan(endPos.Length() / 100.0f);
         }
     }

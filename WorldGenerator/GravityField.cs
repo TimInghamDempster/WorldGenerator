@@ -11,6 +11,8 @@ namespace WorldGenerator
 
         public int ValueCount => throw new NotImplementedException();
 
+        public IEnumerable<Vector3> Values => throw new NotImplementedException();
+
         public GravityField(float TN, IManifold manifold)
         {
             _TN = TN;
@@ -30,6 +32,6 @@ namespace WorldGenerator
             return dir;
         }
 
-        public Vector3 Values(int index) => Value(Manifold.Values(index));
+        public Vector3 Value(int index) => Value(Manifold.Value(index));
     }
 }

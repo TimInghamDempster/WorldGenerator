@@ -12,6 +12,8 @@ namespace WorldGenerator
 
         public int ValueCount => _positions.Length;
 
+        public IEnumerable<Vector3> Values => _positions;
+
         public PointCloudManifold(Vector3[] positions)
         {
             _positions = positions;
@@ -44,7 +46,7 @@ namespace WorldGenerator
 
             for(int i = 0; i < _positions.Length; i++)
             {
-                _positions[i] = _positions[i] + velocityField.Values(i) * timestep.Value;
+                _positions[i] = _positions[i] + velocityField.Value(i) * timestep.Value;
             }
         }
 
@@ -89,6 +91,6 @@ namespace WorldGenerator
             throw new NotImplementedException();
         }
 
-        public Vector3 Values(int index) => _positions[index];
+        public Vector3 Value(int index) => _positions[index];
     }
 }

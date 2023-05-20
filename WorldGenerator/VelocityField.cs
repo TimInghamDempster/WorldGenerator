@@ -10,6 +10,8 @@ namespace WorldGenerator
 
         public int ValueCount => _values.Length;
 
+        public IEnumerable<Vector3> Values => _values;
+
         public VelocityField(IManifold manifold, Vector3[] values)
         {
             Manifold = manifold;
@@ -26,10 +28,10 @@ namespace WorldGenerator
 
             for (int i = 0; i < _values.Length; i++)
             {
-                _values[i] = _values[i] + forces.Values(i) * timestep.Value;
+                _values[i] = _values[i] + forces.Value(i) * timestep.Value;
             }
         }
 
-        public Vector3 Values(int index) => _values[index];
+        public Vector3 Value(int index) => _values[index];
     }
 }

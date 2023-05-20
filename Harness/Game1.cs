@@ -19,7 +19,7 @@ namespace WorldGenerator
         private SpriteBatch? _spriteBatch;
 
         private Effect? _worldEffect;
-        private RenderMesh? _cube;
+        private RenderMesh? _worldMesh;
         private Matrix _world = Matrix.CreateTranslation(0, 0, 0);
         private Matrix _view = Matrix.CreateLookAt(new Vector3(0, 0, 3), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
         private Matrix _projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.01f, 100f);
@@ -78,7 +78,7 @@ namespace WorldGenerator
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
 
-            _cube = new RenderMesh(_geodesic, GraphicsDevice);
+            _worldMesh = new RenderMesh(_geodesic, GraphicsDevice);
 
             base.Initialize();
         }
@@ -257,6 +257,8 @@ namespace WorldGenerator
 
         private void DrawPerspective(Vector3 cameraLoc)
         {
+            _worldMesh?.SetVertices(_manifold.Values, GraphicsDevice);
+
             _view = Matrix.CreateLookAt(cameraLoc, Vector3.Zero, Vector3.UnitY);
 
             //DrawGlobeTexture();
@@ -268,8 +270,8 @@ namespace WorldGenerator
             //_worldEffect?.Parameters["GlobeTexture"].SetValue(_globeTexture);
             // _worldEffect.Parameters["NormalTexture"].SetValue(_normalTexture);
 
-            GraphicsDevice.SetVertexBuffer(_cube?.VertexBuffer);
-            GraphicsDevice.Indices = _cube?.IndexBuffer;
+            GraphicsDevice.SetVertexBuffer(_worldMesh?.VertexBuffer);
+            GraphicsDevice.Indices = _worldMesh?.IndexBuffer;
 
             var rasterizerState = new RasterizerState
             {
@@ -284,11 +286,11 @@ namespace WorldGenerator
             foreach (EffectPass pass in _worldEffect?.CurrentTechnique.Passes ?? Enumerable.Empty<EffectPass>())
             {
                 pass.Apply();
-                if (_cube == null)
+                if (_worldMesh == null)
                 {
                     continue;
                 }
-                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cube.FacesCount);
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _worldMesh.FacesCount);
             }
         }
 
