@@ -19,7 +19,7 @@ namespace WorldGenerator
         private SpriteBatch? _spriteBatch;
 
         private Effect? _worldEffect;
-        private Mesh? _cube;
+        private RenderMesh? _cube;
         private Matrix _world = Matrix.CreateTranslation(0, 0, 0);
         private Matrix _view = Matrix.CreateLookAt(new Vector3(0, 0, 3), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
         private Matrix _projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.01f, 100f);
@@ -32,12 +32,12 @@ namespace WorldGenerator
         private const float _mouseSensitivity = 0.01f;
         private int _width;
         private int _height;
-
-        private readonly IManifold _manifold;
-        private readonly DistToNearestPointField _field;
-        private readonly DistToGrayscaleVisualiser _visualiser = new();
-        private readonly VelocityField _velocity;
-        private readonly GravityField _gravity;
+        private readonly Mesh _geodesic;
+        private IManifold _manifold;
+        private DistToNearestPointField _field;
+        private DistToGrayscaleVisualiser _visualiser = new();
+        private VelocityField _velocity;
+        private GravityField _gravity;
 
         private int _frameCount = -1;
 
@@ -51,11 +51,13 @@ namespace WorldGenerator
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            _manifold = new PointCloudManifold(
-                SphereLoader.LoadSphere().ToArray());
-            _field = new (_manifold);
+            _geodesic = Mesh.Geodesic(1.0f, 100000);
+
+            _manifold = new PointCloudManifold(_geodesic.Vertices.Select(v => new Position(v)).ToArray());
+            _field = new(_manifold);
             _gravity = new(0.0001f, _manifold);
             _velocity = new(_manifold, new Velocity[_manifold.ValueCount]);
+
         }
 
         protected override void Initialize()
@@ -76,8 +78,7 @@ namespace WorldGenerator
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
 
-            //_cube = Mesh.Cube(GraphicsDevice, 1.1f);
-            _cube = Mesh.Geodesic(GraphicsDevice, 1.0f, 10000);
+            _cube = new RenderMesh(_geodesic, GraphicsDevice);
 
             base.Initialize();
         }
@@ -196,8 +197,8 @@ namespace WorldGenerator
 
             var timestep = new Time(1);
 
-            _velocity.ProgressTime(timestep, _gravity);
-            _manifold.ProgressTime(_velocity, timestep);
+            //_velocity.ProgressTime(timestep, _gravity);
+            //_manifold.ProgressTime(_velocity, timestep);
 
             base.Update(gameTime);
         }
@@ -260,9 +261,11 @@ namespace WorldGenerator
         {
             _view = Matrix.CreateLookAt(cameraLoc, Vector3.Zero, Vector3.UnitY);
 
-            DrawGlobeTexture();
+            //DrawGlobeTexture();
 
             var wvp = _world * _view * _projection;
+
+            //_cube = new RenderMesh(_cube.Faces, _cube.Vertices, _graphics.GraphicsDevice);
 
             _worldEffect?.Parameters["WorldViewProjection"].SetValue(wvp);
             _worldEffect?.Parameters["CameraPos"].SetValue(cameraLoc);
@@ -285,7 +288,11 @@ namespace WorldGenerator
             foreach (EffectPass pass in _worldEffect?.CurrentTechnique.Passes ?? Enumerable.Empty<EffectPass>())
             {
                 pass.Apply();
-                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cube?.Faces.Count ?? 0);
+                if (_cube == null)
+                {
+                    continue;
+                }
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cube.FacesCount);
             }
         }
 
