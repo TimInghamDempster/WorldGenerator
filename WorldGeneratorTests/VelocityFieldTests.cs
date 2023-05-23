@@ -26,7 +26,7 @@ namespace WorldGeneratorTests
             var velocities = new VelocityField(manifold2, new Vector3[1] { Vector3.Zero });
 
             // Act
-            velocities.ProgressTime(new Time(1), forces);
+            velocities.ProgressTime(forces, new Time(1));
         }
 
         [TestMethod]
@@ -55,7 +55,7 @@ namespace WorldGeneratorTests
             // Act
             for (int i = 0; i < timestepCount; i++)
             {
-                velocities.ProgressTime(new Time(timestep), forces);
+                velocities.ProgressTime(forces, new Time(timestep));
             }
 
             // Assert

@@ -197,7 +197,7 @@ namespace WorldGenerator
 
             var timestep = new Time(1);
 
-            _velocity.ProgressTime(timestep, _gravity);
+            _velocity.ProgressTime(_gravity, timestep);
             _manifold.ProgressTime(_velocity, timestep);
 
             base.Update(gameTime);

@@ -16,7 +16,7 @@ namespace WorldGeneratorTests
             var points = new Vector3[100];
             for (int i = 0; i < points.Length; i++)
             {
-                points[i] = RandomVector(random);
+                points[i] = Misc.RandomVector(random);
             }
             var manifold = new PointCloudManifold(points);
 
@@ -29,9 +29,6 @@ namespace WorldGeneratorTests
             // Assert
             returnedPoint.Should().Be(closestPoint);
         }
-
-        private Vector3 RandomVector(Random random) =>
-            new((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble());
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
@@ -54,10 +51,10 @@ namespace WorldGeneratorTests
             // Arrange
             var random = new Random();
 
-            var startPos = RandomVector(random);
+            var startPos = Misc.RandomVector(random);
             var points = new Vector3[1] { startPos };
 
-            var vel = RandomVector(random);
+            var vel = Misc.RandomVector(random);
             var timestepCount = random.Next(1000);
             var timestep = (float)random.NextDouble();
 

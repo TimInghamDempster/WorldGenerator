@@ -118,6 +118,11 @@ namespace WorldGenerator
 
         public IEnumerable<TStorage> Values => ValuesArray;
 
+        public void SetValue(int index, TStorage newValue)
+        {
+            ValuesArray[index] = newValue;
+        }
+
         public TStorage Value(int index) => ValuesArray[index];
     }
 

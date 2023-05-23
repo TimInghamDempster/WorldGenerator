@@ -18,7 +18,7 @@ namespace WorldGenerator
             _values = values;
         }
 
-        public void ProgressTime(Time timestep, IDiscreteField<TN, Vector3> forces)
+        public void ProgressTime(IDiscreteField<TN, Vector3> forces, Time timestep)
         {
             if (forces.Manifold != Manifold)
             {
