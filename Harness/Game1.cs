@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
+using WorldGeneratorFunctionalTests;
 
 namespace WorldGenerator
 {
@@ -32,12 +32,6 @@ namespace WorldGenerator
         private const float _mouseSensitivity = 0.01f;
         private int _width;
         private int _height;
-        private readonly Mesh _geodesic;
-        private IManifold _manifold;
-        private DistToNearestPointField _field;
-        private DistToGrayscaleVisualiser _visualiser = new();
-        private VelocityField _velocity;
-        private GravityField _gravity;
 
         private int _frameCount = -1;
 
@@ -45,19 +39,13 @@ namespace WorldGenerator
 
         private Texture2D? _sectionTexture;
 
+        private IFunctionalTest _test = new GravityTest();
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-
-            _geodesic = Mesh.Geodesic(1.0f, 100000);
-
-            _manifold = new PointCloudManifold(_geodesic.Vertices.ToArray());
-            _field = new(_manifold);
-            _gravity = new(0.0001f, _manifold);
-            _velocity = new(_manifold, new Vector3[_manifold.ValueCount]);
-
         }
 
         protected override void Initialize()
@@ -78,7 +66,8 @@ namespace WorldGenerator
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
 
-            _worldMesh = new RenderMesh(_geodesic, GraphicsDevice);
+            var mesh = new Mesh(_test.Faces, _test.Vertices.ToList());
+            _worldMesh = new RenderMesh(mesh, GraphicsDevice);
 
             base.Initialize();
         }
@@ -122,7 +111,7 @@ namespace WorldGenerator
         {
             byte[] colourBuffer = new byte[_cubeTexSize * _cubeTexSize * 4];
             //for (int y = 0; y < _cubeTexSize; y++)
-            Parallel.For(0, _cubeTexSize, y =>
+         /*   Parallel.For(0, _cubeTexSize, y =>
             {
                 for (int x = 0; x < _cubeTexSize; x++)
                 {
@@ -141,7 +130,7 @@ namespace WorldGenerator
                     colourBuffer[baseIndex + 2] = colour.B;
                     colourBuffer[baseIndex + 3] = 255;
                 }
-            });
+            });*/
             return colourBuffer;
         }
 
@@ -197,8 +186,7 @@ namespace WorldGenerator
 
             var timestep = new Time(1);
 
-            _velocity.ProgressTime(_gravity, timestep);
-            _manifold.ProgressTime(_velocity, timestep);
+            _test.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -225,7 +213,7 @@ namespace WorldGenerator
 
         private void DrawSection(Vector3 obj)
         {
-            var width = _sectionTexture?.Width ?? 10;
+            /*var width = _sectionTexture?.Width ?? 10;
             var height = _sectionTexture?.Height ?? 10;
             var data = new Color[width * height];
 
@@ -252,12 +240,12 @@ namespace WorldGenerator
 
             _spriteBatch?.Draw(_sectionTexture, new Rectangle(0, 0, 1920, 1080), Color.White);
 
-            _spriteBatch?.End();
+            _spriteBatch?.End();*/
         }
 
         private void DrawPerspective(Vector3 cameraLoc)
         {
-            _worldMesh?.SetVertices(_manifold.Values, GraphicsDevice);
+            _worldMesh?.SetVertices(_test.Vertices, GraphicsDevice);
 
             _view = Matrix.CreateLookAt(cameraLoc, Vector3.Zero, Vector3.UnitY);
 

@@ -5,9 +5,11 @@ VisualStudioVersion = 17.5.33414.496
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Harness", "Harness\Harness.csproj", "{2666741F-9894-470C-82C0-DD6EB3134CB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldGenerator", "WorldGenerator\WorldGenerator.csproj", "{2F65631E-BD6C-4CBD-9A90-717872E20A5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorldGenerator", "WorldGenerator\WorldGenerator.csproj", "{2F65631E-BD6C-4CBD-9A90-717872E20A5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldGeneratorTests", "WorldGeneratorTests\WorldGeneratorTests.csproj", "{DB628247-C1CD-4523-92CD-3BE0D3204F39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorldGeneratorTests", "WorldGeneratorTests\WorldGeneratorTests.csproj", "{DB628247-C1CD-4523-92CD-3BE0D3204F39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldGeneratorFunctionalTests", "WorldGeneratorFunctionalTests\WorldGeneratorFunctionalTests.csproj", "{AFC21E36-6352-4B3C-B0B3-1511FBD08909}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{DB628247-C1CD-4523-92CD-3BE0D3204F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB628247-C1CD-4523-92CD-3BE0D3204F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB628247-C1CD-4523-92CD-3BE0D3204F39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFC21E36-6352-4B3C-B0B3-1511FBD08909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFC21E36-6352-4B3C-B0B3-1511FBD08909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFC21E36-6352-4B3C-B0B3-1511FBD08909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFC21E36-6352-4B3C-B0B3-1511FBD08909}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
