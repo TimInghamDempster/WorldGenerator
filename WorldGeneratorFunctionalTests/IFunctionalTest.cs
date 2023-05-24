@@ -3,12 +3,10 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public enum State
-    {
-        Running,
-        Passed,
-        Failed
-    }
+    public interface State { }
+    public record Running : State { }
+    public record Succeeded : State { }
+    public record Failed(string Error) : State { }
 
     public interface IFunctionalTest
     {

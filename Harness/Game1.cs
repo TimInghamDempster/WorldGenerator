@@ -32,6 +32,7 @@ namespace WorldGenerator
         private const float _mouseSensitivity = 0.01f;
         private int _width;
         private int _height;
+        private SpriteFont? _font;
 
         private int _frameCount = -1;
 
@@ -40,6 +41,7 @@ namespace WorldGenerator
         private Texture2D? _sectionTexture;
 
         private IFunctionalTest _test = new GravityTest();
+        private State? _status;
 
         public Game1()
         {
@@ -68,6 +70,8 @@ namespace WorldGenerator
 
             var mesh = new Mesh(_test.Faces, _test.Vertices.ToList());
             _worldMesh = new RenderMesh(mesh, GraphicsDevice);
+
+            _font = Content.Load<SpriteFont>("File");
 
             base.Initialize();
         }
@@ -184,9 +188,11 @@ namespace WorldGenerator
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            if (_status is Failed) return;
+
             var timestep = new Time(1);
 
-            _test.Update(gameTime);
+            _status = _test.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -207,6 +213,20 @@ namespace WorldGenerator
             };
 
             renderFunc(cameraLoc);
+
+            var statusString = _status switch
+            {
+                Running => "Running",
+                Succeeded => "Succeeded",
+                Failed failure => $"Failed: {failure.Error}",
+                _ => throw new NotImplementedException(),
+            };
+
+            _spriteBatch?.Begin();
+
+            _spriteBatch?.DrawString(_font, statusString, new Vector2(10, 10), Color.White);
+
+            _spriteBatch?.End();
 
             base.Draw(gameTime);
         }

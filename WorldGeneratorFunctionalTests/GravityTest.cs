@@ -10,6 +10,9 @@ namespace WorldGeneratorFunctionalTests
         private Mesh _geodesic;
         private IManifold _manifold;
 
+        private Running _running = new();
+        private int _frameCount;
+
         public GravityTest()
         {
 
@@ -26,12 +29,23 @@ namespace WorldGeneratorFunctionalTests
 
         public State Update(GameTime gameTime)
         {
+            if(_frameCount > 1000) return new Failed("Mesh did not collapse in time");
+
+            foreach(var point in _manifold.Values)
+            {
+                if(point.Length() > 0.1f) continue;
+
+                return new Succeeded();
+            }
+
             var time = new Time(1);
 
             _velocity.ProgressTime(_gravity, time);
             _manifold.ProgressTime(_velocity, time);
 
-            return State.Running;
+            _frameCount++;
+
+            return _running;
         }
     }
 }
