@@ -29,13 +29,13 @@ namespace WorldGeneratorFunctionalTests
 
         public State Update(GameTime gameTime)
         {
-            if(_frameCount > 1000) return new Failed("Mesh did not collapse in time");
+            if(_frameCount > 1000) return new Failed("Gravity Test", "Mesh did not collapse in time");
 
             foreach(var point in _manifold.Values)
             {
                 if(point.Length() > 0.1f) continue;
 
-                return new Succeeded();
+                return new Succeeded("Gravity Test");
             }
 
             var time = new Time(1);

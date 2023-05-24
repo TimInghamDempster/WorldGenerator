@@ -5,8 +5,8 @@ namespace WorldGeneratorFunctionalTests
 {
     public interface State { }
     public record Running : State { }
-    public record Succeeded : State { }
-    public record Failed(string Error) : State { }
+    public record Succeeded(string Name) : State { }
+    public record Failed(string Name, string Error) : State { }
 
     public interface IFunctionalTest
     {

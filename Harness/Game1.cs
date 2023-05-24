@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using WorldGeneratorFunctionalTests;
 
@@ -28,7 +29,6 @@ namespace WorldGenerator
         private const int _cubeTexSize = 1024;
         private const float _initialZoom = 500;
         private float _zoomFactor = _initialZoom;
-        private const float _maxYRange = 0.5f;
         private const float _mouseSensitivity = 0.01f;
         private int _width;
         private int _height;
@@ -38,16 +38,24 @@ namespace WorldGenerator
 
         private RenderMode _renderMode = RenderMode.Perspective;
 
-        private Texture2D? _sectionTexture;
-
-        private IFunctionalTest _test = new GravityTest();
-        private State? _status;
+        private IReadOnlyList<IFunctionalTest> _tests =
+            new List<IFunctionalTest>
+            {
+                new GravityTest(),
+                new BouyancyTestsFloats(),
+                new BouyancyTestsSinks(),
+            };
+        private State _status = new Running();
+        private int _testIndex = -1;
+        private List<State> _results = new();
+        private IFunctionalTest _currentTest;
 
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            _currentTest = _tests.First();
         }
 
         protected override void Initialize()
@@ -63,117 +71,30 @@ namespace WorldGenerator
             _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
             _normalTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Vector4);
 
-            _sectionTexture = new Texture2D(GraphicsDevice, 640, 360);
 
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
-
-            var mesh = new Mesh(_test.Faces, _test.Vertices.ToList());
-            _worldMesh = new RenderMesh(mesh, GraphicsDevice);
+            SetNextTest();
 
             _font = Content.Load<SpriteFont>("File");
 
             base.Initialize();
         }
 
-
-        private void DrawGlobeTexture()
+        private void SetNextTest()
         {
-            if (_frameCount == 0)
+            if(_status is not null and not Running)
             {
-                var faces = new byte[6][];
-                var normalFaces = new Vector4[6][];
-                for (int i = 0; i < faces.Length; i++)
-                {
-                    normalFaces[i] = new Vector4[_cubeTexSize * _cubeTexSize];
-                }
-
-                for (int i = 0; i < 6; i++) faces[i] = DrawGlobeFace(i, normalFaces[i]);
-
-                //Parallel.For(0, 6, i => faces[i] = DrawGlobeFace(i, normalFaces[i]));
-
-                _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
-
-
-                for (int i = 0; i < faces.Length; i++)
-                {
-                    _globeTexture?.SetData((CubeMapFace)i, faces[i]);
-                    _normalTexture?.SetData((CubeMapFace)i, normalFaces[i]);
-                }
+                _results.Add(_status);
             }
-        }
 
-        private record FaceGeometry(Vector3 Centre, Vector3 Offset1, Vector3 Offset2, CubeMapFace Face);
-        private byte[] DrawGlobeFace(int face, Vector4[] normals)
-        {
-            var geometry = CalcGeometry(face);
+            _testIndex++;
+            if (_testIndex >= _tests.Count) return;
 
-            return WriteColourMap(normals, geometry);
-        }
-
-        private byte[] WriteColourMap(Vector4[] normals, FaceGeometry geometry)
-        {
-            byte[] colourBuffer = new byte[_cubeTexSize * _cubeTexSize * 4];
-            //for (int y = 0; y < _cubeTexSize; y++)
-         /*   Parallel.For(0, _cubeTexSize, y =>
-            {
-                for (int x = 0; x < _cubeTexSize; x++)
-                {
-                    var dx = x - _cubeTexSize / 2;
-                    var dy = y - _cubeTexSize / 2;
-
-                    var dir = geometry.Centre + dx * geometry.Offset1 + dy * geometry.Offset2;
-                    dir = Vector3.Normalize(dir);
-
-                    var colour = _visualiser.GetColour(dir, _field);
-
-                    var normalIndex = (x + y * _cubeTexSize);
-                    var baseIndex = normalIndex * 4;
-                    colourBuffer[baseIndex + 0] = colour.R;
-                    colourBuffer[baseIndex + 1] = colour.G;
-                    colourBuffer[baseIndex + 2] = colour.B;
-                    colourBuffer[baseIndex + 3] = 255;
-                }
-            });*/
-            return colourBuffer;
-        }
-
-        private FaceGeometry CalcGeometry(int face)
-        {
-            var typedFace = (CubeMapFace)face;
-            var faceNormal = typedFace switch
-            {
-                CubeMapFace.PositiveX => Vector3.UnitX,
-                CubeMapFace.NegativeX => -Vector3.UnitX,
-                CubeMapFace.PositiveY => -Vector3.UnitY,
-                CubeMapFace.NegativeY => Vector3.UnitY,
-                CubeMapFace.PositiveZ => Vector3.UnitZ,
-                CubeMapFace.NegativeZ => -Vector3.UnitZ,
-                _ => throw new NotImplementedException(),
-            };
-            var offsetAmount = 2.0f / _cubeTexSize;
-            var offset1 = typedFace switch
-            {
-                CubeMapFace.PositiveX => new Vector3(0.0f, 0.0f, -offsetAmount),
-                CubeMapFace.NegativeX => new Vector3(0.0f, 0.0f, offsetAmount),
-                CubeMapFace.PositiveY => new Vector3(offsetAmount, 0.0f, 0.0f),
-                CubeMapFace.NegativeY => new Vector3(offsetAmount, 0.0f, 0.0f),
-                CubeMapFace.PositiveZ => new Vector3(offsetAmount, 0.0f, 0.0f),
-                CubeMapFace.NegativeZ => new Vector3(-offsetAmount, 0.0f, 0.0f),
-                _ => throw new NotImplementedException(),
-            };
-            var offset2 = typedFace switch
-            {
-                CubeMapFace.PositiveX => new Vector3(0.0f, offsetAmount, 0.0f),
-                CubeMapFace.NegativeX => new Vector3(0.0f, offsetAmount, 0.0f),
-                CubeMapFace.PositiveY => new Vector3(0.0f, 0.0f, offsetAmount),
-                CubeMapFace.NegativeY => new Vector3(0.0f, 0.0f, -offsetAmount),
-                CubeMapFace.PositiveZ => new Vector3(0.0f, offsetAmount, 0.0f),
-                CubeMapFace.NegativeZ => new Vector3(0.0f, offsetAmount, 0.0f),
-                _ => throw new NotImplementedException(),
-            };
-
-            return new(faceNormal, offset1, offset2, typedFace);
+            var mesh = new Mesh(_tests[_testIndex].Faces, _tests[_testIndex].Vertices.ToList());
+            _worldMesh = new RenderMesh(mesh, GraphicsDevice);
+            _currentTest = _tests[_testIndex];
+            _status = new Running();
         }
 
         protected override void LoadContent()
@@ -188,11 +109,13 @@ namespace WorldGenerator
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (_status is Failed) return;
-
             var timestep = new Time(1);
 
-            _status = _test.Update(gameTime);
+            if (_status is not Running) return;
+
+            _status = _currentTest.Update(gameTime);
+
+            if (_status is not Running) SetNextTest();
 
             base.Update(gameTime);
         }
@@ -208,68 +131,39 @@ namespace WorldGenerator
             Action<Vector3> renderFunc = _renderMode switch
             {
                 RenderMode.Perspective => DrawPerspective,
-                RenderMode.Section => DrawSection,
+                RenderMode.Section => DrawPerspective,
                 _ => throw new NotImplementedException(),
             };
 
             renderFunc(cameraLoc);
 
-            var statusString = _status switch
+            for (int i = 0; i < _results.Count; i++)
             {
-                Running => "Running",
-                Succeeded => "Succeeded",
-                Failed failure => $"Failed: {failure.Error}",
-                _ => throw new NotImplementedException(),
-            };
+                (string message, Color col) status = _results[i] switch
+                {
+                    Running => ("Running", Color.White),
+                    Succeeded success => ($"{success.Name}: Succeeded", Color.Green),
+                    Failed failure => ($"{failure.Name}: Failed, {failure.Error}", Color.Red),
+                    _ => throw new NotImplementedException(),
+                };
 
-            _spriteBatch?.Begin();
+                _spriteBatch?.Begin();
 
-            _spriteBatch?.DrawString(_font, statusString, new Vector2(10, 10), Color.White);
+                _spriteBatch?.DrawString(_font, status.message, new Vector2(10, 10 + 20*i), status.col);
 
-            _spriteBatch?.End();
+                _spriteBatch?.End();
+            }
 
             base.Draw(gameTime);
         }
 
-        private void DrawSection(Vector3 obj)
-        {
-            /*var width = _sectionTexture?.Width ?? 10;
-            var height = _sectionTexture?.Height ?? 10;
-            var data = new Color[width * height];
-
-            var aspectRatio = 16f / 9f;
-            var scale = _zoomFactor / _initialZoom;
-
-            for (int dy = 0; dy < height; dy++)
-            {
-                for (int dx = 0; dx < width; dx++)
-                {
-                    var col = _visualiser.GetColour(
-                        new(((dx / (float)(width /  2)) - 1f) * aspectRatio * scale, 
-                            (dy / ((float)height / 2) - 1f) * scale, 
-                            0.0f), 
-                        _field);
-
-                    data[dx + dy * width] = col;
-                }
-            }
-
-            _sectionTexture?.SetData(data);
-
-            _spriteBatch?.Begin();
-
-            _spriteBatch?.Draw(_sectionTexture, new Rectangle(0, 0, 1920, 1080), Color.White);
-
-            _spriteBatch?.End();*/
-        }
+       
 
         private void DrawPerspective(Vector3 cameraLoc)
         {
-            _worldMesh?.SetVertices(_test.Vertices, GraphicsDevice);
+            _worldMesh?.SetVertices(_currentTest.Vertices, GraphicsDevice);
 
             _view = Matrix.CreateLookAt(cameraLoc, Vector3.Zero, Vector3.UnitY);
-
-            //DrawGlobeTexture();
 
             var wvp = _world * _view * _projection;
 
