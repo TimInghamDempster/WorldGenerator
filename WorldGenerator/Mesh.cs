@@ -157,12 +157,12 @@ namespace WorldGenerator
             var verts = new List<Vector3>(icosahedron.Vertices);
             var faces = new List<Face>(icosahedron.Faces);
 
-            faces = Subdivide(faces, verts, minFaces);
+            faces = Subdivide(faces, verts, minFaces, radius);
 
             return new (faces, verts);
         }
 
-        private static List<Face> Subdivide(List<Face> faces, List<Vector3> verts, int minFaces)
+        private static List<Face> Subdivide(List<Face> faces, List<Vector3> verts, int minFaces, float radius)
         {
             while (faces.Count < minFaces)
             {
@@ -195,7 +195,7 @@ namespace WorldGenerator
 
                 for (int i = 0; i < verts.Count; i++)
                 {
-                    verts[i] = Vector3.Normalize(verts[i]);
+                    verts[i] = Vector3.Normalize(verts[i]) * radius;
                 }
 
                 faces = newFaces;
@@ -227,7 +227,7 @@ namespace WorldGenerator
 
             for (int i = 0; i < verts.Count; i++)
             {
-                verts[i] = Vector3.Normalize(verts[i]);
+                verts[i] = Vector3.Normalize(verts[i]) * radius;
             }
 
             // add triangles

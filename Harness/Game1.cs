@@ -27,7 +27,7 @@ namespace WorldGenerator
         private TextureCube? _globeTexture;
         private TextureCube? _normalTexture;
         private const int _cubeTexSize = 1024;
-        private const float _initialZoom = 500;
+        private const float _initialZoom = 3300;
         private float _zoomFactor = _initialZoom;
         private const float _mouseSensitivity = 0.01f;
         private int _width;
@@ -198,7 +198,7 @@ namespace WorldGenerator
 
         private Vector3 AimCamera()
         {
-            _zoomFactor = 500 - Mouse.GetState().ScrollWheelValue / 10.0f;
+            _zoomFactor = _initialZoom - Mouse.GetState().ScrollWheelValue / 10.0f;
 
             var cameraLoc = new Vector3(0.0f, 0.0f, _zoomFactor / 200.0f);
 

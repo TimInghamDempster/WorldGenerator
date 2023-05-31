@@ -16,7 +16,7 @@ namespace WorldGeneratorFunctionalTests
         public GravityTest()
         {
 
-            _geodesic = Mesh.Geodesic(1.0f, 100000);
+            _geodesic = Mesh.Geodesic(Constants.EarthRadiusMm, 100000);
 
             _manifold = new PointCloudManifold(_geodesic.Vertices.ToArray());
             _gravity = new(0.0001f, _manifold);
