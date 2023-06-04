@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class BouyancyField : IContinousField<TN, Vector3>, IDiscreteField<TN, Vector3>
+    public class BouyancyField : IDiscreteField<TN, Vector3>
     {
         private readonly float _mantleDensityGTPerMm3;
 
@@ -17,11 +17,6 @@ namespace WorldGenerator
         }
 
         public IEnumerable<Vector3> Values => throw new NotImplementedException();
-
-        public Vector3 Value(Vector3 position)
-        {
-            throw new NotImplementedException();
-        }
 
         public Vector3 Value(int index)
         {

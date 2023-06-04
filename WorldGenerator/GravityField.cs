@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class GravityField : IContinousField<TN, Vector3>, IDiscreteField<TN, Vector3>
+    public class GravityField : IDiscreteField<TN, Vector3>
     {
         public IManifold Manifold { get; init; }
 
@@ -15,7 +15,7 @@ namespace WorldGenerator
             Manifold = manifold;
         }
 
-        public Vector3 Value(Vector3 position)
+        private Vector3 Value(Vector3 position)
         {
             var dir = position;
             

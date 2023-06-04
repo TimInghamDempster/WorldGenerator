@@ -2,30 +2,6 @@
 
 namespace WorldGenerator
 {
-    public interface IVisualiser<TUnit, TStorage>
-    {
-        Color GetColour(Vector3 pos, IContinousField<TUnit, TStorage> field);
-    }
-
-    public class DistToGrayscaleVisualiser : IVisualiser<Mm, float>
-    {
-        public Color GetColour(Vector3 pos, IContinousField<Mm, float> field)
-        {
-            var dist = field.Value(pos);
-            var col = 1.0f - dist * 200.0f;
-            return new Color(col, col, col);
-        }
-    }
-
-    public class Vector3Visualiser<TUnit> : IVisualiser<TUnit, Vector3>
-        where TUnit : IUnit
-    {
-        public Color GetColour(Vector3 pos, IContinousField<TUnit, Vector3> field)
-        {
-            return new Color(field.Value(pos));
-        }
-    }
-
     public interface IManifold : IDiscreteField<Mm, Vector3>
     {
         IEnumerable<int> Neighbours(int origin);
@@ -108,10 +84,7 @@ namespace WorldGenerator
         IManifold Manifold { get; }
         IEnumerable<TStorage> Values { get; }
     }
-    public interface IContinousField<TUnit, TStorage>
-    {
-        TStorage Value(Vector3 position);
-    }
+
     public record SimpleField<TUnit, TStorage>(TStorage[] ValuesArray, IManifold Manifold) : IDiscreteField<TUnit, TStorage>
     {
         public int ValueCount => ValuesArray.Length;
