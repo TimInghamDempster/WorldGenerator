@@ -13,5 +13,7 @@ namespace WorldGeneratorFunctionalTests
         IReadOnlyList<Face> Faces { get; }
         IEnumerable<Vector3> Vertices { get; }
         State Update(GameTime gameTime);
+
+        string Name { get; }
     }
 }

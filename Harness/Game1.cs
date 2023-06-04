@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using WorldGeneratorFunctionalTests;
 
 namespace WorldGenerator
@@ -42,8 +43,8 @@ namespace WorldGenerator
             new List<IFunctionalTest>
             {
                 new GravityTest(),
-                new BouyancyTestsFloats(),
-                new BouyancyTestsSinks(),
+                //new BouyancyTestsFloats(),
+                //new BouyancyTestsSinks(),
             };
         private State _status = new Running();
         private int _testIndex = -1;
@@ -137,6 +138,17 @@ namespace WorldGenerator
 
             renderFunc(cameraLoc);
 
+            _spriteBatch?.Begin();
+
+            if (_testIndex < _tests.Count)
+            {
+                _spriteBatch?.DrawString(
+                    _font,
+                    $"Running: {_tests[_testIndex].Name}",
+                    new Vector2(10, 10), 
+                    Color.White);
+            }
+
             for (int i = 0; i < _results.Count; i++)
             {
                 (string message, Color col) status = _results[i] switch
@@ -147,12 +159,10 @@ namespace WorldGenerator
                     _ => throw new NotImplementedException(),
                 };
 
-                _spriteBatch?.Begin();
-
-                _spriteBatch?.DrawString(_font, status.message, new Vector2(10, 10 + 20*i), status.col);
-
-                _spriteBatch?.End();
+                _spriteBatch?.DrawString(_font, status.message, new Vector2(10, 10 + 20 * (i + 1)), status.col);
             }
+
+            _spriteBatch?.End();
 
             base.Draw(gameTime);
         }

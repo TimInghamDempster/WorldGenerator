@@ -19,7 +19,7 @@ namespace WorldGeneratorFunctionalTests
             _geodesic = Mesh.Geodesic(Constants.EarthRadiusMm, 100000);
 
             _manifold = new PointCloudManifold(_geodesic.Vertices.ToArray());
-            _gravity = new(0.0001f, _manifold);
+            _gravity = new(_manifold);
             _velocity = new(_manifold, new Vector3[_manifold.ValueCount]);
         }
 
@@ -27,9 +27,11 @@ namespace WorldGeneratorFunctionalTests
 
         public IEnumerable<Vector3> Vertices => _manifold.Values;
 
+        public string Name => "Gravity Test";
+
         public State Update(GameTime gameTime)
         {
-            if(_frameCount > 1000) return new Failed("Gravity Test", "Mesh did not collapse in time");
+            if(_frameCount > 1000) return new Failed(Name, "Mesh did not collapse in time");
 
             foreach(var point in _manifold.Values)
             {
