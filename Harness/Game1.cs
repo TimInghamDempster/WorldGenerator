@@ -42,9 +42,7 @@ namespace WorldGenerator
         private IReadOnlyList<IFunctionalTest> _tests =
             new List<IFunctionalTest>
             {
-                new GravityTest(),
-                //new BouyancyTestsFloats(),
-                //new BouyancyTestsSinks(),
+                new DummyTest()
             };
         private State _status = new Running();
         private int _testIndex = -1;

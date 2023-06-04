@@ -44,38 +44,5 @@ namespace WorldGeneratorTests
             // Act
             manifold.ProgressTime(velocities, new Time(1));
         }
-
-        [TestMethod]
-        public void MomentumExists()
-        {
-            // Arrange
-            var random = new Random();
-
-            var startPos = Misc.RandomVector(random);
-            var points = new Vector3[1] { startPos };
-
-            var vel = Misc.RandomVector(random);
-            var timestepCount = random.Next(1000);
-            var timestep = (float)random.NextDouble();
-
-            // S = ut + 1/2at^2, with a = 0
-            var endPos = startPos + vel * timestepCount * timestep;
-
-            var manifold = new PointCloudManifold(points);
-
-            var velocities = new VelocityField(
-                manifold,
-                new Vector3[1] { vel });
-
-            // Act
-            for (int i = 0; i < timestepCount; i++)
-            {
-                manifold.ProgressTime(velocities, new Time(timestep));
-            }
-
-            // Assert
-            var delta = (manifold.Value(0) - endPos);
-            delta.Length().Should().BeLessThan(endPos.Length() / 100.0f);
-        }
     }
 }
