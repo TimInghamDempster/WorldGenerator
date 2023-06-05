@@ -2,13 +2,13 @@
 
 namespace WorldGenerator
 {
-    public class DensityField : IDiscreteField<GTPerKm3, float>
+    public class CrustDensityField : IDiscreteField<GTPerKm3, float>
     {
         private readonly IManifold _manifold;
         private readonly float[] _values;
         private readonly DensityChange _densityIncreaseRate;
 
-        public DensityField(IManifold manifold, float[] values, DensityChange densityIncreaseRate)
+        public CrustDensityField(IManifold manifold, float[] values, DensityChange densityIncreaseRate)
         {
             _manifold = manifold;
             _values = values;

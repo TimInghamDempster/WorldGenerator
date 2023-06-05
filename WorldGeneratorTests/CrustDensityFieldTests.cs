@@ -5,7 +5,7 @@ using WorldGenerator;
 namespace WorldGeneratorTests
 {
     [TestClass]
-    public class DensityFieldTests
+    public class CrustDensityFieldTests
     {
         // This might be too simple a behaviour, but it's
         // a start
@@ -15,7 +15,7 @@ namespace WorldGeneratorTests
             // Arrange
             var manifold = new PointCloudManifold(new Vector3[1]);
             var densityIncreaseRate = new DensityChange(0.1f);
-            var densityFieid = new DensityField(
+            var densityFieid = new CrustDensityField(
                 manifold, new[] { 0.0f }, densityIncreaseRate);
 
             // Act
