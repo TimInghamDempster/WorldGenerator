@@ -255,5 +255,35 @@ namespace WorldGenerator
 
             return new (faces, verts);
         }
+
+        public static Mesh Plane(int subdivisons)
+        {
+            var verts = new List<Vector3>();
+            var faces = new List<Face>();
+
+            for (int y = 0; y <= subdivisons; y++)
+            {
+                for (int x = 0; x <= subdivisons; x++)
+                {
+                    verts.Add(new Vector3(x - subdivisons / 2.0f, 0, y - subdivisons / 2.0f));
+                }
+            }
+
+            for (int y = 0; y < subdivisons; y++)
+            {
+                for (int x = 0; x < subdivisons; x++)
+                {
+                    var i0 = x + y * (subdivisons + 1);
+                    var i1 = x + 1 + y * (subdivisons + 1);
+                    var i2 = x + (y + 1) * (subdivisons + 1);
+                    var i3 = x + 1 + (y + 1) * (subdivisons + 1);
+
+                    faces.Add(new(i0, i2, i1));
+                    faces.Add(new(i1, i2, i3));
+                }
+            }
+
+            return new (faces, verts);
+        }
     }
 }

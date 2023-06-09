@@ -7,6 +7,7 @@ namespace WorldGenerator
     public interface MmPerKy : IUnit { }
     public interface GTPerKm3 : IUnit { }
     public interface GTPerKm3PerKy : IUnit { }
+    public interface Unitless : IUnit { }
     public interface IKy : IUnit { }
     public interface TNPerKm3 : IUnit { }
     public interface TN : IUnit { }

@@ -46,7 +46,8 @@ namespace WorldGenerator
 
             for(int i = 0; i < _positions.Length; i++)
             {
-                _positions[i] = _positions[i] + velocityField.Value(i) * timestep.Value;
+                var vel = velocityField.Value(i);
+                _positions[i] = _positions[i] + vel * timestep.Value;
             }
         }
 

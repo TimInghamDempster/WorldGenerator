@@ -42,7 +42,7 @@ namespace WorldGenerator
         private IReadOnlyList<IFunctionalTest> _tests =
             new List<IFunctionalTest>
             {
-                new DummyTest()
+                new CrustSinksWithAge()
             };
         private State _status = new Running();
         private int _testIndex = -1;
