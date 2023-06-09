@@ -42,7 +42,8 @@ namespace WorldGenerator
         private IReadOnlyList<IFunctionalTest> _tests =
             new List<IFunctionalTest>
             {
-                new CrustSinksWithAge()
+                new CrustSinksWithAge(),
+                new ForcesStretchPlate(),
             };
         private State _status = new Running();
         private int _testIndex = -1;
@@ -89,9 +90,13 @@ namespace WorldGenerator
 
             _testIndex++;
             if (_testIndex >= _tests.Count) return;
+            try
+            {
+                var mesh = new Mesh(_tests[_testIndex].Faces, _tests[_testIndex].Vertices.ToList());
+                _worldMesh = new RenderMesh(mesh, GraphicsDevice);
+            }
+            catch { }
 
-            var mesh = new Mesh(_tests[_testIndex].Faces, _tests[_testIndex].Vertices.ToList());
-            _worldMesh = new RenderMesh(mesh, GraphicsDevice);
             _currentTest = _tests[_testIndex];
             _status = new Running();
         }
@@ -112,10 +117,17 @@ namespace WorldGenerator
 
             if (_status is not Running) return;
 
-            _status = _currentTest.Update(gameTime);
+            try
+            {
+                _status = _currentTest.Update(gameTime);
 
-            if (_status is not Running) SetNextTest();
-
+                if (_status is not Running) SetNextTest();
+            }
+            catch (Exception e)
+            {
+                _status = new Failed(_currentTest.Name, e.Message);
+                SetNextTest();
+            }
             base.Update(gameTime);
         }
 
@@ -169,7 +181,11 @@ namespace WorldGenerator
 
         private void DrawPerspective(Vector3 cameraLoc)
         {
-            _worldMesh?.SetVertices(_currentTest.Vertices, GraphicsDevice);
+            try
+            {
+                _worldMesh?.SetVertices(_currentTest.Vertices, GraphicsDevice);
+            }
+            catch { }
 
             _view = Matrix.CreateLookAt(cameraLoc, Vector3.Zero, Vector3.UnitY);
 
