@@ -10,6 +10,7 @@ namespace WorldGeneratorFunctionalTests
         private CrustDensityField _densityField;
         private IManifold _manifold;
         private float xThreshold = float.MinValue;
+        private int _framecount;
 
         public CrustSinksWithAge()
         {
@@ -30,6 +31,7 @@ namespace WorldGeneratorFunctionalTests
         {
             var time = new Time(1);
             _densityField.ProgressTime(time);
+            _velocityField.ProgressTime();
             _manifold.ProgressTime(_velocityField, time);
 
             var sunkDepth = -1.0f;
@@ -53,6 +55,10 @@ namespace WorldGeneratorFunctionalTests
             {
                 return new Succeeded(Name);
             }
+
+            if (_framecount > 100) return new Failed(Name, $"Crust did not sink to {sunkDepth} in 100 frames");
+
+            _framecount++;
 
             return new Running();
         }
