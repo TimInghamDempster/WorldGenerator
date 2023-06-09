@@ -4,30 +4,29 @@ namespace WorldGenerator
 {
     public class PointCloudManifold : IManifold
     {
-        private readonly Vector3[] _positions;
         private readonly Dictionary<Int3, List<int>> _positionsHash;
         private const float _quantFactor = 100.0f;
 
         public IManifold Manifold => this;
 
-        public int ValueCount => _positions.Length;
+        public int ValueCount => Values.Length;
 
-        public IEnumerable<Vector3> Values => _positions;
+        public Vector3[] Values { get; }
 
         public PointCloudManifold(Vector3[] positions)
         {
-            _positions = positions;
+            Values = positions;
 
-            _positionsHash = new Dictionary<Int3, List<int>>();
+            _positionsHash = new ();
             BuildHash();
         }
 
         private void BuildHash()
         {
             _positionsHash.Clear();
-            for (int i = 0; i < _positions.Count(); i++)
+            for (int i = 0; i < Values.Count(); i++)
             {
-                var quantPos = new Int3(_positions[i] * _quantFactor);
+                var quantPos = new Int3(Values[i] * _quantFactor);
                 if (false == _positionsHash.ContainsKey(quantPos))
                 {
                     _positionsHash.Add(quantPos, new List<int>());
@@ -36,7 +35,7 @@ namespace WorldGenerator
             }
         }
 
-        public void ProgressTime(IDiscreteField<MmPerKy, Vector3> velocityField, Time timestep)
+        public void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep)
         {
             if(velocityField.Manifold != this)
             {
@@ -44,10 +43,10 @@ namespace WorldGenerator
                     "with a different manifold");
             }
 
-            for(int i = 0; i < _positions.Length; i++)
+            for(int i = 0; i < Values.Length; i++)
             {
-                var vel = velocityField.Value(i);
-                _positions[i] = _positions[i] + vel * timestep.Value;
+                var vel = velocityField.Values[i];
+                Values[i] = Values[i] + vel * timestep.Value;
             }
         }
 
@@ -77,7 +76,7 @@ namespace WorldGenerator
 
             return
                 candidates.
-                Select(c => _positions[c]).
+                Select(c => Values[c]).
                 OrderBy(p => Vector3.Distance(p, testLocation)).
                 First();
         }
@@ -92,6 +91,6 @@ namespace WorldGenerator
             throw new NotImplementedException();
         }
 
-        public Vector3 Value(int index) => _positions[index];
+        public Vector3 Value(int index) => Values[index];
     }
 }

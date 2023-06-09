@@ -2,11 +2,9 @@
 
 namespace WorldGenerator
 {
-    public class FuncField<TUnit, TStorage> : IDiscreteField<Unitless, TStorage>
+    public class FuncField<TUnit, TStorage> : IField<Unitless, TStorage>
     {
         private readonly Func<Vector3, TStorage> _func;
-
-        public int ValueCount => throw new NotImplementedException();
 
         public IManifold Manifold { get; }
 
@@ -14,10 +12,15 @@ namespace WorldGenerator
         {
             Manifold = manifold;
             _func = func;
+
+            Values = new TStorage[Manifold.Values.Length];
+
+            for(int i = 0; i < Manifold.Values.Length; i++)
+            {
+                Values[i] = _func(Manifold.Values[i]);
+            }
         }
 
-        public IEnumerable<TStorage> Values => throw new NotImplementedException();
-
-        public TStorage Value(int index) => _func(Manifold.Value(index));
+        public TStorage[] Values { get; }
     }
 }

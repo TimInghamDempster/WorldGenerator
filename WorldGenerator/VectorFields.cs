@@ -2,11 +2,11 @@
 
 namespace WorldGenerator
 {
-    public interface IManifold : IDiscreteField<Mm, Vector3>
+    public interface IManifold : IField<Mm, Vector3>
     {
         IEnumerable<int> Neighbours(int origin);
         Vector3 NearestPoint(Vector3 testLocation);
-        void ProgressTime(IDiscreteField<MmPerKy, Vector3> velocityField, Time timestep);
+        void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep);
     }
 
     public class TempManifold : IManifold
@@ -15,7 +15,7 @@ namespace WorldGenerator
 
         public int ValueCount => throw new NotImplementedException();
 
-        public IEnumerable<Vector3> Values => throw new NotImplementedException();
+        public Vector3[] Values => throw new NotImplementedException();
 
         public Vector3 NearestPoint(Vector3 testLocation)
         {
@@ -27,7 +27,7 @@ namespace WorldGenerator
             throw new NotImplementedException();
         }
 
-        public void ProgressTime(IDiscreteField<MmPerKy, Vector3> velocityField, Time timestep)
+        public void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep)
         {
             throw new NotImplementedException();
         }
@@ -51,7 +51,7 @@ namespace WorldGenerator
 
         public int ValueCount => throw new NotImplementedException();
 
-        public IEnumerable<Vector3> Values => throw new NotImplementedException();
+        public Vector3[] Values => throw new NotImplementedException();
 
         public Vector3 NearestPoint(Vector3 testLocation)
         {
@@ -66,7 +66,7 @@ namespace WorldGenerator
                 _ => new int[] { origin - 1, origin + 1 }
             };
 
-        public void ProgressTime(IDiscreteField<MmPerKy, Vector3> velocityField, Time timestep)
+        public void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep)
         {
             throw new NotImplementedException();
         }
@@ -77,33 +77,25 @@ namespace WorldGenerator
         }
     }
 
-    public interface IDiscreteField<TUnit, TStorage>
+    public interface IField<TUnit, TStorage>
     {
-        TStorage Value(int index);
-        int ValueCount { get; }
         IManifold Manifold { get; }
-        IEnumerable<TStorage> Values { get; }
+        TStorage[] Values { get; }
     }
 
-    public record SimpleField<TUnit, TStorage>(TStorage[] ValuesArray, IManifold Manifold) : IDiscreteField<TUnit, TStorage>
+    public record SimpleField<TUnit, TStorage>(TStorage[] Values, IManifold Manifold) : IField<TUnit, TStorage>
     {
-        public int ValueCount => ValuesArray.Length;
-
-        public IEnumerable<TStorage> Values => ValuesArray;
-
         public void SetValue(int index, TStorage newValue)
         {
-            ValuesArray[index] = newValue;
+            Values[index] = newValue;
         }
-
-        public TStorage Value(int index) => ValuesArray[index];
     }
 
     public static class FieldOperators
     {
-        public static SimpleField<TUnit, float> DiffuseSimple<TUnit>(IDiscreteField<TUnit, float> initialField)
+        public static SimpleField<TUnit, float> DiffuseSimple<TUnit>(IField<TUnit, float> initialField)
         {
-            var newVals = new float[initialField.ValueCount];
+            var newVals = new float[initialField.Values.Length];
 
             for(int i = 0; i < newVals.Count(); i++)
             {
@@ -111,8 +103,8 @@ namespace WorldGenerator
                 var distributedToNeighbours = 0.1f * neighbours.Count();
 
                 newVals[i] =
-                    initialField.Value(i) * (1.0f - distributedToNeighbours) +
-                    neighbours.Select(n => initialField.Value(n)).Sum() * 0.1f;
+                    initialField.Values[i] * (1.0f - distributedToNeighbours) +
+                    neighbours.Select(n => initialField.Values[n]).Sum() * 0.1f;
             }
 
             return new(newVals, initialField.Manifold);

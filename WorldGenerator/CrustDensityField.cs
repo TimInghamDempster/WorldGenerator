@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class CrustDensityField : IDiscreteField<GTPerKm3, float>
+    public class CrustDensityField : IField<GTPerKm3, float>
     {
         private readonly IManifold _manifold;
         private readonly float[] _values;
@@ -17,9 +17,8 @@ namespace WorldGenerator
 
         public IManifold Manifold => _manifold;
 
-        public int ValueCount => _values.Length;
 
-        public IEnumerable<float> Values => _values;
+        public float[] Values => _values;
 
         public void ProgressTime(Time time)
         {
@@ -28,9 +27,6 @@ namespace WorldGenerator
                 _values[i] = _values[i] + _densityIncreaseRate.Value * time.Value;
             }
         }
-
-        public float Value(Vector3 position) =>
-            throw new NotImplementedException();
 
         public float Value(int index) => _values[index];
     }

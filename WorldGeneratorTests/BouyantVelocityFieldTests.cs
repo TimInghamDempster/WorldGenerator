@@ -21,7 +21,7 @@ namespace WorldGeneratorTests
 
             // Assert
             Vector3.Dot(
-                Vector3.Normalize(velocities.Value(0)),
+                Vector3.Normalize(velocities.Values[0]),
                 Vector3.Normalize(points[0]))
                 .Should().Be(-1.0f);
         }
@@ -39,7 +39,7 @@ namespace WorldGeneratorTests
             var velocities = new BouyantVelocityField(manifold, density, gravityField);
 
             // Assert
-            velocities.Value(0).Should().Be(Vector3.Zero);
+            velocities.Values[0].Should().Be(Vector3.Zero);
         }
     }
 }
