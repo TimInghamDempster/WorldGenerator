@@ -43,7 +43,7 @@ namespace WorldGenerator
             new List<IFunctionalTest>
             {
                 new CrustSinksWithAge(),
-                new ForcesStretchPlate(),
+                new LargeForcesStretchPlate(),
             };
         private State _status = new Running();
         private int _testIndex = -1;

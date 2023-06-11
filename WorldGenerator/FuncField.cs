@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class FuncField<TUnit, TStorage> : IField<Unitless, TStorage>
+    public class FuncField<TUnit, TStorage> : IField<TUnit, TStorage>
     {
         private readonly Func<Vector3, TStorage> _func;
 
