@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class CrustDensityField : IField<GTPerKm3, float>
+    public class CrustDensityField : IField<GTPerKm3, float>, ITimeDependent
     {
         private readonly IManifold _manifold;
         private readonly float[] _values;
@@ -20,7 +20,7 @@ namespace WorldGenerator
 
         public float[] Values => _values;
 
-        public void ProgressTime(Time time)
+        public void ProgressTime(TimeKY time)
         {
             for(int i = 0; i < _values.Length; i++)
             {

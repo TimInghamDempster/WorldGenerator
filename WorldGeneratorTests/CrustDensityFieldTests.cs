@@ -19,7 +19,7 @@ namespace WorldGeneratorTests
                 manifold, new[] { 0.0f }, densityIncreaseRate);
 
             // Act
-            densityFieid.ProgressTime(new Time(10.0f));
+            densityFieid.ProgressTime(new TimeKY(10.0f));
 
             // Assert
             densityFieid.Value(0).Should().Be(1.0f);

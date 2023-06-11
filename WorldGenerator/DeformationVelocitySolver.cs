@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class DeformationVelocitySolver : IField<MmPerKy, Vector3>
+    public class DeformationVelocitySolver : IField<MmPerKy, Vector3>, ITimeDependent
     {
         private readonly IField<TN, Vector3> _externalForces;
 
@@ -15,5 +15,10 @@ namespace WorldGenerator
         }
 
         public Vector3[] Values => _externalForces.Values;
+
+        public void ProgressTime(TimeKY timestep)
+        {
+            // NoP
+        }
     }
 }

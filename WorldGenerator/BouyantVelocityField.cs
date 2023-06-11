@@ -2,7 +2,7 @@
 
 namespace WorldGenerator
 {
-    public class BouyantVelocityField : IField<MmPerKy, Vector3>
+    public class BouyantVelocityField : IField<MmPerKy, Vector3>, ITimeDependent
     {
         private readonly IManifold _manifold;
         private readonly IField<GTPerKm3, float> _density;
@@ -20,14 +20,14 @@ namespace WorldGenerator
             _density = density;
             _gravityDir = gravityDir;
             Values = new Vector3[Manifold.Values.Length];
-            ProgressTime();
+            ProgressTime(new(0));
         }
 
         public IManifold Manifold => _manifold;
 
         public Vector3[] Values { get; }
 
-        public void ProgressTime()
+        public void ProgressTime(TimeKY time)
         {
             for(int i = 0; i < Values.Length; i++)
             {

@@ -4,9 +4,6 @@ namespace WorldGenerator
 {
     public interface IManifold : IField<Mm, Vector3>
     {
-        IEnumerable<int> Neighbours(int origin);
-        Vector3 NearestPoint(Vector3 testLocation);
-        void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep);
     }
 
     public class TempManifold : IManifold
@@ -23,16 +20,6 @@ namespace WorldGenerator
         }
 
         public IEnumerable<int> Neighbours(int origin)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Vector3 Value(int index)
         {
             throw new NotImplementedException();
         }
@@ -65,16 +52,11 @@ namespace WorldGenerator
                 int i when i == _length - 1  => new int[] { _length - 2 },
                 _ => new int[] { origin - 1, origin + 1 }
             };
+    }
 
-        public void ProgressTime(IField<MmPerKy, Vector3> velocityField, Time timestep)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Vector3 Value(int index)
-        {
-            throw new NotImplementedException();
-        }
+    public interface ITimeDependent
+    {
+        void ProgressTime(TimeKY timestep);
     }
 
     public interface IField<TUnit, TStorage>
@@ -83,31 +65,25 @@ namespace WorldGenerator
         TStorage[] Values { get; }
     }
 
-    public record SimpleField<TUnit, TStorage>(TStorage[] Values, IManifold Manifold) : IField<TUnit, TStorage>
+    public class FieldGroup : ITimeDependent
     {
-        public void SetValue(int index, TStorage newValue)
+        private readonly IEnumerable<ITimeDependent> _fields;
+
+        public FieldGroup(IEnumerable<ITimeDependent> fields)
         {
-            Values[index] = newValue;
+            _fields = fields;
+        }
+
+        public void ProgressTime(TimeKY timestep)
+        {
+            foreach(var field in _fields)
+            {
+                field.ProgressTime(timestep);
+            }
         }
     }
 
-    public static class FieldOperators
+    public record SimpleField<TUnit, TStorage>(TStorage[] Values, IManifold Manifold) : IField<TUnit, TStorage>
     {
-        public static SimpleField<TUnit, float> DiffuseSimple<TUnit>(IField<TUnit, float> initialField)
-        {
-            var newVals = new float[initialField.Values.Length];
-
-            for(int i = 0; i < newVals.Count(); i++)
-            {
-                var neighbours = initialField.Manifold.Neighbours(i);
-                var distributedToNeighbours = 0.1f * neighbours.Count();
-
-                newVals[i] =
-                    initialField.Values[i] * (1.0f - distributedToNeighbours) +
-                    neighbours.Select(n => initialField.Values[n]).Sum() * 0.1f;
-            }
-
-            return new(newVals, initialField.Manifold);
-        }
     }
 }

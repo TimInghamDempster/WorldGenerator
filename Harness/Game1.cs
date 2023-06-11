@@ -113,7 +113,7 @@ namespace WorldGenerator
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            var timestep = new Time(1);
+            var timestep = new TimeKY(1);
 
             if (_status is not Running) return;
 

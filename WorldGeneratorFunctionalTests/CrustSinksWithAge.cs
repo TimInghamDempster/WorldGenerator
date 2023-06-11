@@ -5,12 +5,14 @@ namespace WorldGeneratorFunctionalTests
 {
     public class CrustSinksWithAge : IFunctionalTest
     {
-        private Mesh _plane = Mesh.Plane(10);
-        private BouyantVelocityField _velocityField;
-        private CrustDensityField _densityField;
-        private IManifold _manifold;
+        private readonly Mesh _plane = Mesh.Plane(10);
+        private readonly BouyantVelocityField _velocityField;
+        private readonly CrustDensityField _densityField;
+        private readonly IManifold _manifold;
         private float xThreshold = float.MinValue;
         private int _framecount;
+        private readonly FieldGroup _fieldGroup;
+        private readonly ManifoldManipulator _manipulator;
 
         public CrustSinksWithAge()
         {
@@ -19,6 +21,14 @@ namespace WorldGeneratorFunctionalTests
                 _manifold.Values.Select(p => Constants.OceanCrustDensityGTPerKm3 - 6.0f - p.X * 0.5f).ToArray();
             _densityField = new(_manifold, densities, new DensityChange(0.1f));
             _velocityField = new(_manifold, _densityField, new FuncField<Unitless, Vector3>(_manifold, p => -Vector3.UnitY));
+            _manipulator = new ManifoldManipulator(_manifold, _velocityField);
+
+            _fieldGroup = new FieldGroup(new List<ITimeDependent>
+            {
+                _densityField,
+                _velocityField,
+                _manipulator
+            });
         }
 
         public IReadOnlyList<Face> Faces => _plane.Faces;
@@ -29,10 +39,8 @@ namespace WorldGeneratorFunctionalTests
 
         public State Update(GameTime gameTime)
         {
-            var time = new Time(1);
-            _densityField.ProgressTime(time);
-            _velocityField.ProgressTime();
-            _manifold.ProgressTime(_velocityField, time);
+            var time = new TimeKY(1);
+            _fieldGroup.ProgressTime(time);
 
             var sunkDepth = -1.0f;
 

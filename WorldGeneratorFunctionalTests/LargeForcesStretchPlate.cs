@@ -9,6 +9,8 @@ namespace WorldGeneratorFunctionalTests
         private readonly Mesh _plane = Mesh.Plane(10);
         private readonly DeformationVelocitySolver _deformationVelocitySolver;
         private readonly FuncField<TN, Vector3> _forces;
+        private readonly FieldGroup _fieldGroup;
+        private readonly ManifoldManipulator _manipulator;
 
         public LargeForcesStretchPlate()
         {
@@ -23,6 +25,14 @@ namespace WorldGeneratorFunctionalTests
                 });
 
             _deformationVelocitySolver = new DeformationVelocitySolver(_manifold, _forces);
+            _manipulator = new ManifoldManipulator(_manifold, _deformationVelocitySolver);
+
+            _fieldGroup = new FieldGroup(new List<ITimeDependent>
+            {
+                _forces,
+                _deformationVelocitySolver,
+                _manipulator
+            });
         }
         public IReadOnlyList<Face> Faces => _plane.Faces;
 
@@ -32,8 +42,8 @@ namespace WorldGeneratorFunctionalTests
 
         public State Update(GameTime gameTime)
         {
-            var time = new Time(1);
-            _manifold.ProgressTime(_deformationVelocitySolver, time);
+            var time = new TimeKY(1);
+            _fieldGroup.ProgressTime(time);
 
             var max = _manifold.Values[0].X;
             var min = _manifold.Values[0].X;

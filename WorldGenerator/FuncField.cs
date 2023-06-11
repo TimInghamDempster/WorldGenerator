@@ -2,9 +2,10 @@
 
 namespace WorldGenerator
 {
-    public class FuncField<TUnit, TStorage> : IField<TUnit, TStorage>
+    public class FuncField<TUnit, TStorage> : IField<TUnit, TStorage>, ITimeDependent
     {
         private readonly Func<Vector3, TStorage> _func;
+        private TimeKY _time;
 
         public IManifold Manifold { get; }
 
@@ -22,5 +23,10 @@ namespace WorldGenerator
         }
 
         public TStorage[] Values { get; }
+
+        public void ProgressTime(TimeKY timestep)
+        {
+            _time.Value += timestep.Value;
+        }
     }
 }
