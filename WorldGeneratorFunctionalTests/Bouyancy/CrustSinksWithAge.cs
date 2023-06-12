@@ -16,7 +16,7 @@ namespace WorldGeneratorFunctionalTests
 
         public CrustSinksWithAge()
         {
-            _manifold = new PointCloudManifold(_plane.Vertices.ToArray());
+            _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
             var densities =
                 _manifold.Values.Select(p => Constants.OceanCrustDensityGTPerKm3 - 6.0f - p.X * 0.5f).ToArray();
             _densityField = new(_manifold, densities, new DensityChange(0.1f));

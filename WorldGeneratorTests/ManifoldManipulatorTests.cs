@@ -13,8 +13,8 @@ namespace WorldGeneratorTests
         {
             // Arrange
             var points = new Vector3[1];
-            var manifold = new PointCloudManifold(points);
-            var manifold2 = new PointCloudManifold(points);
+            var manifold = new PointCloudManifold(points, new Face[0]);
+            var manifold2 = new PointCloudManifold(points, new Face[0]);
             var manipulator = new ManifoldManipulator(manifold, new FuncField<MmPerKy, Vector3>(manifold2, p => Vector3.Zero));
             
             var velocities = new SimpleField<MmPerKy, Vector3>(new Vector3[1], manifold2);
@@ -40,7 +40,7 @@ namespace WorldGeneratorTests
             // S = ut + 1/2at^2, with a = 0
             var endPos = startPos + vel * timestepCount * timestep;
 
-            var manifold = new PointCloudManifold(points);
+            var manifold = new PointCloudManifold(points, new Face[0]);
 
             var velocities = new SimpleField<MmPerKy, Vector3>(
                 new Vector3[1] { vel }, manifold);

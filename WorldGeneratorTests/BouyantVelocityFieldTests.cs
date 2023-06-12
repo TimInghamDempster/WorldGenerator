@@ -12,7 +12,7 @@ namespace WorldGeneratorTests
         {
             // Arrange
             var points = new Vector3[1] { Vector3.UnitX };
-            var manifold = new PointCloudManifold(points);
+            var manifold = new PointCloudManifold(points, new Face[0]);
             var density = new SimpleField<GTPerKm3, float>(new[] { Constants.OceanCrustDensityGTPerKm3 * 1.3f }, manifold);
             var gravityField = new FuncField<Unitless, Vector3>(manifold ,p => -Vector3.UnitX);
 
@@ -31,7 +31,7 @@ namespace WorldGeneratorTests
         {
             // Arrange
             var points = new Vector3[1];
-            var manifold = new PointCloudManifold(points);
+            var manifold = new PointCloudManifold(points, new Face[0]);
             var density = new SimpleField<GTPerKm3, float>(new[] { Constants.OceanCrustDensityGTPerKm3 * 0.9f }, manifold);
             var gravityField = new FuncField<Unitless, Vector3>(manifold, p => -Vector3.UnitY);
 

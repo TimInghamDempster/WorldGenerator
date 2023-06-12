@@ -11,10 +11,11 @@ namespace WorldGeneratorFunctionalTests
         private readonly FuncField<TN, Vector3> _forces;
         private readonly FieldGroup _fieldGroup;
         private readonly ManifoldManipulator _manipulator;
+        private int _frameCount;
 
         public LargeForcesStretchPlate()
         {
-            _manifold = new PointCloudManifold(_plane.Vertices.ToArray());
+            _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 v => v.X switch
@@ -42,21 +43,23 @@ namespace WorldGeneratorFunctionalTests
 
         public State Update(GameTime gameTime)
         {
+            _frameCount++;
             var time = new TimeKY(1);
             _fieldGroup.ProgressTime(time);
 
             var max = _manifold.Values[0].X;
             var min = _manifold.Values[0].X;
 
-            foreach (var v in _manifold.Values)
-            {
-                if (v.X > max) max = v.X;
-                if (v.X < min) min = v.X;
-            }
-
-            if (max - min > 20.0f)
+            if (_manifold.Edges.All(
+                e => e.Length() < 0.05f ||
+                (e.Length() > 1.95f && e.Length() < 2.05f)))
             {
                 return new Succeeded(Name);
+            }
+
+            if(_frameCount > 100)
+            {
+                  return new Failed(Name, $"Plate did not stretch in 100 frames");
             }
 
             return new Running();

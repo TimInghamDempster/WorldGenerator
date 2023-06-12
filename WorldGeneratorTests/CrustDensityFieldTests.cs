@@ -13,7 +13,7 @@ namespace WorldGeneratorTests
         public void DensityIncreasesLinearlyWithTime()
         {
             // Arrange
-            var manifold = new PointCloudManifold(new Vector3[1]);
+            var manifold = new PointCloudManifold(new Vector3[1], new Face[0]);
             var densityIncreaseRate = new DensityChange(0.1f);
             var densityFieid = new CrustDensityField(
                 manifold, new[] { 0.0f }, densityIncreaseRate);
