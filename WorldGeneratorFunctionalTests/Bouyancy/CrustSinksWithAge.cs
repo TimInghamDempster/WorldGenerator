@@ -20,7 +20,7 @@ namespace WorldGeneratorFunctionalTests
             var densities =
                 _manifold.Values.Select(p => Constants.OceanCrustDensityGTPerKm3 - 6.0f - p.X * 0.5f).ToArray();
             _densityField = new(_manifold, densities, new DensityChange(0.1f));
-            _velocityField = new(_manifold, _densityField, new FuncField<Unitless, Vector3>(_manifold, p => -Vector3.UnitY));
+            _velocityField = new(_manifold, _densityField, new FuncField<Unitless, Vector3>(_manifold, (_, _)=> -Vector3.UnitY));
             _manipulator = new ManifoldManipulator(_manifold, _velocityField);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>

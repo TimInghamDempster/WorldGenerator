@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Diagnostics;
 
 namespace WorldGenerator
 {
@@ -12,13 +13,80 @@ namespace WorldGenerator
         {
             Manifold = manifold;
             _externalForces = externalForces;
+            Values = new Vector3[Manifold.Values.Length];
         }
 
-        public Vector3[] Values => _externalForces.Values;
+        public Vector3[] Values {get; }
 
         public void ProgressTime(TimeKY timestep)
         {
-            // NoP
+            var newPositions = new List<Vector3>(Manifold.Values);
+
+            for(int i = 0; i < Manifold.Values.Length; i++)
+            {
+                newPositions[i] = Manifold.Values[i];
+            }
+
+            float maxForce;
+            ApplyExternalForces(newPositions, timestep);
+            do
+            {
+                maxForce = AdjustSprings(newPositions, Manifold.Values, timestep);
+            } while(maxForce > 0.001f);
+
+
+            for (int i = 0; i < Manifold.Values.Length; i++)
+            {
+                Manifold.Values[i] = newPositions[i];
+            }
+        }
+
+        private float AdjustSprings(List<Vector3> newPositions, IReadOnlyList<Vector3> originalPositions, TimeKY timestep)
+        {
+            var forces= new List<Vector3>(originalPositions.Count);
+            for(int i = 0; i < originalPositions.Count; i++)
+            {
+                forces.Add(Vector3.Zero);
+            }
+
+            for(int i = 0; i < originalPositions.Count; i++)
+            { 
+                foreach(var neighbour in Manifold.Neighbours[i].Indices)
+                {
+                    if(i >= neighbour)
+                    {
+                        continue;
+                    }
+
+                    var spring = newPositions[i] - newPositions[neighbour];
+                    var originalLength = (originalPositions[i] - originalPositions[neighbour]).Length();
+                    var springLength = spring.Length();
+                    var springDirection = spring / springLength;
+                    var springForce = springDirection * (springLength - originalLength);
+                    forces[i] -= springForce;
+                    forces[neighbour] += springForce;
+
+                    if(springLength == 0)
+                    {
+                        Debugger.Break();
+                    }
+                }
+            }
+
+            for(int i = 0; i < originalPositions.Count; i++)
+            {
+                newPositions[i] += forces[i] * timestep.Value * 0.1f;
+            }
+
+            return forces.Max(f => f.Length());
+        }
+
+        private void ApplyExternalForces(List<Vector3> newPositions, TimeKY timestep)
+        {
+            for(int i = 0; i < newPositions.Count; i++)
+            {
+                newPositions[i] += _externalForces.Values[i] * timestep.Value;
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ namespace WorldGeneratorTests
             var points = new Vector3[1];
             var manifold = new PointCloudManifold(points, new Face[0]);
             var manifold2 = new PointCloudManifold(points, new Face[0]);
-            var manipulator = new ManifoldManipulator(manifold, new FuncField<MmPerKy, Vector3>(manifold2, p => Vector3.Zero));
+            var manipulator = new ManifoldManipulator(manifold, new FuncField<MmPerKy, Vector3>(manifold2, (_,_) => Vector3.Zero));
             
             var velocities = new SimpleField<MmPerKy, Vector3>(new Vector3[1], manifold2);
 

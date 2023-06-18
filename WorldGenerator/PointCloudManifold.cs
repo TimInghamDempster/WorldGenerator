@@ -9,8 +9,6 @@ namespace WorldGenerator
         public Vector3[] Values { get; }
 
         public Dictionary<int, Neighbours> Neighbours { get; }
-        public IEnumerable<Vector3> Edges => Neighbours.SelectMany(
-            n => n.Value.Indices.Select(i => Values[i] - Values[n.Key]));
 
         public PointCloudManifold(Vector3[] positions, IEnumerable<Face> faces)
         {

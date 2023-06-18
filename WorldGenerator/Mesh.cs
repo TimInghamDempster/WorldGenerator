@@ -278,8 +278,16 @@ namespace WorldGenerator
                     var i2 = x + (y + 1) * (subdivisons + 1);
                     var i3 = x + 1 + (y + 1) * (subdivisons + 1);
 
-                    faces.Add(new(i0, i2, i1));
-                    faces.Add(new(i1, i2, i3));
+                    if(x % 2 == 0)
+                    {
+                        faces.Add(new(i0, i2, i1));
+                        faces.Add(new(i1, i2, i3));
+                    }
+                    else
+                    {
+                        faces.Add(new(i0, i3, i1));
+                        faces.Add(new(i0, i2, i3));
+                    }
                 }
             }
 

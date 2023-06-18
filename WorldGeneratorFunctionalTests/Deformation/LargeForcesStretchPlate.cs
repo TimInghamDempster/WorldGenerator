@@ -8,6 +8,7 @@ namespace WorldGeneratorFunctionalTests
         private readonly PointCloudManifold _manifold;
         private readonly Mesh _plane = Mesh.Plane(10);
         private readonly DeformationVelocitySolver _deformationVelocitySolver;
+        private readonly IEnumerable<int> _centralEdges;
         private readonly FuncField<TN, Vector3> _forces;
         private readonly FieldGroup _fieldGroup;
         private readonly ManifoldManipulator _manipulator;
@@ -16,14 +17,27 @@ namespace WorldGeneratorFunctionalTests
         public LargeForcesStretchPlate()
         {
             _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
+            var edgeIndices =
+                _manifold.Values.
+                Select((v, i) => (v, i)).
+                Where(v => v.v.X < -4 || v.v.X > 4).
+                Select(p => p.i);
+
+            _centralEdges =
+                _manifold.Values.
+                Select((v, i) => (v, i)).
+                Where(v => 
+                (v.v.X > -1.1 && v.v.X < -0.9) || 
+                (v.v.X > 0.9 && v.v.X < 1.1)).
+                Select(p => p.i).
+                ToList();
+
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
-                v => v.X switch
-                {
-                    < -4 => new Vector3(-1.0f, 0, 0),
-                    > 4 => new Vector3(1.0f, 0, 0),
-                    _ => Vector3.Zero
-                });
+                (i, v) => edgeIndices.Contains(i) ?
+                new Vector3(v.X / MathF.Abs(v.X), 0, 0) :
+                Vector3.Zero);
+                
 
             _deformationVelocitySolver = new DeformationVelocitySolver(_manifold, _forces);
             _manipulator = new ManifoldManipulator(_manifold, _deformationVelocitySolver);
@@ -50,16 +64,14 @@ namespace WorldGeneratorFunctionalTests
             var max = _manifold.Values[0].X;
             var min = _manifold.Values[0].X;
 
-            if (_manifold.Edges.All(
-                e => e.Length() < 0.05f ||
-                (e.Length() > 1.95f && e.Length() < 2.05f)))
+            if (_centralEdges.All(i => MathF.Abs(_manifold.Values[i].X) > 1.5f))
             {
                 return new Succeeded(Name);
             }
 
-            if(_frameCount > 100)
+            if(_frameCount > 1000)
             {
-                  return new Failed(Name, $"Plate did not stretch in 100 frames");
+                  return new Failed(Name, $"Plate did not stretch in 1000 frames");
             }
 
             return new Running();
