@@ -3,7 +3,7 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class LargeForcesStretchPlate : IFunctionalTest
+    public class SmallForcesDontStretchPlate : IFunctionalTest
     {
         private readonly PointCloudManifold _manifold;
         private readonly Mesh _plane = Mesh.Plane(10);
@@ -14,7 +14,7 @@ namespace WorldGeneratorFunctionalTests
         private readonly ManifoldManipulator _manipulator;
         private int _frameCount;
 
-        public LargeForcesStretchPlate()
+        public SmallForcesDontStretchPlate()
         {
             _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
             var edgeIndices =
@@ -35,7 +35,7 @@ namespace WorldGeneratorFunctionalTests
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X), 0, 0) :
+                new Vector3(v.X / (MathF.Abs(v.X) * 2.0f), 0, 0) :
                 Vector3.Zero);
                 
 
@@ -64,14 +64,14 @@ namespace WorldGeneratorFunctionalTests
             var max = _manifold.Values[0].X;
             var min = _manifold.Values[0].X;
 
-            if (_centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 1.5f))
+            if (_centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 1.1f))
             {
-                return new Succeeded(Name);
+                return new Failed(Name, "Plate Stretched Despite Insufficient Force");
             }
 
             if(_frameCount > 1000)
             {
-                  return new Failed(Name, $"Plate did not stretch in 1000 frames");
+                return new Succeeded(Name);
             }
 
             return new Running();

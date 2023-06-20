@@ -44,6 +44,8 @@ namespace WorldGenerator
             {
                 new CrustSinksWithAge(),
                 new LargeForcesStretchPlate(),
+                new SmallForcesDontStretchPlate(),
+                new PlateStretchesAtWeakPoint(),
             };
         private State _status = new Running();
         private int _testIndex = -1;

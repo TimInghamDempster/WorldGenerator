@@ -32,8 +32,30 @@ namespace WorldGenerator
             do
             {
                 maxForce = AdjustSprings(newPositions, Manifold.Values, timestep);
-            } while(maxForce > 0.001f);
+            } while(maxForce > 0.1f);
 
+            var targetForceMagnitude = _externalForces.Values.Sum(v => v.Length());
+            var currentForceMagnitude = 
+                newPositions.
+                Where((v,i) => _externalForces.Values[i].Length() > 0.01f).
+                Select((v,i) => (v,i)).
+                Sum(vi => (vi.v - Manifold.Values[vi.i]).Length());
+
+            var forceRatio = targetForceMagnitude / currentForceMagnitude;
+
+            var threshold = 0.005f;
+            for(int i = 0; i < Manifold.Values.Length; i++)
+            {
+                var force = newPositions[i] - Manifold.Values[i];
+                if(force.Length() * forceRatio < threshold)
+                {
+                    newPositions[i] = Manifold.Values[i];
+                }
+                else
+                {
+                    newPositions[i] = Manifold.Values[i] + force * forceRatio * timestep.Value;
+                }
+            }
 
             for (int i = 0; i < Manifold.Values.Length; i++)
             {
@@ -75,7 +97,7 @@ namespace WorldGenerator
 
             for(int i = 0; i < originalPositions.Count; i++)
             {
-                newPositions[i] += forces[i] * timestep.Value * 0.1f;
+                newPositions[i] += forces[i] * 0.1f;
             }
 
             return forces.Max(f => f.Length());
