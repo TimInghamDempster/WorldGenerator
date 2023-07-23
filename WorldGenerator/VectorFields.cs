@@ -4,9 +4,12 @@ namespace WorldGenerator
 {
     public record Neighbours(int[] Indices);
 
+    public record Edge(int Index1, int Index2);
+
     public interface IManifold : IField<Mm, Vector3>
     {
         Dictionary<int, Neighbours> Neighbours { get; }
+        HashSet<Edge> Edges { get; }
     }
 
     public interface ITimeDependent

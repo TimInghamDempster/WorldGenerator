@@ -16,11 +16,12 @@ namespace WorldGenerator
             Values = new Vector3[Manifold.Values.Length];
         }
 
-        public Vector3[] Values {get; }
+        public Vector3[] Values { get; private set; }
 
         public void ProgressTime(TimeKY timestep)
         {
             var newPositions = new List<Vector3>(Manifold.Values);
+            var edgeLengths = CalcEdgeLengths(newPositions, Manifold);
 
             for(int i = 0; i < Manifold.Values.Length; i++)
             {
@@ -43,25 +44,62 @@ namespace WorldGenerator
 
             var forceRatio = targetForceMagnitude / currentForceMagnitude;
 
-            var threshold = 0.005f;
-            for(int i = 0; i < Manifold.Values.Length; i++)
+            var newLengths = CalcEdgeLengths(newPositions, Manifold);
+
+            var threshold = 0.0005f;
+            foreach (var l in newLengths)
             {
-                var force = newPositions[i] - Manifold.Values[i];
-                if(force.Length() * forceRatio < threshold)
+                var delta = newLengths[l.Key] - edgeLengths[l.Key];
+                delta = delta * forceRatio;
+
+                if (MathF.Abs(delta) > threshold)
                 {
-                    newPositions[i] = Manifold.Values[i];
+                    newLengths[l.Key] = edgeLengths[l.Key] + delta;
                 }
                 else
                 {
-                    newPositions[i] = Manifold.Values[i] + force * forceRatio * timestep.Value;
+                    newLengths[l.Key] = edgeLengths[l.Key];
                 }
             }
 
-            for (int i = 0; i < Manifold.Values.Length; i++)
-            {
-                Manifold.Values[i] = newPositions[i];
-            }
+            Values = SolveForEdgeLengthRelaxation(Manifold, newLengths);
         }
+
+        public static Vector3[] SolveForEdgeLengthRelaxation(IManifold manifold, Dictionary<Edge, float> newLengths)
+        {
+            var newPositions = new List<Vector3>(manifold.Values);
+            var springConst = 0.1f;
+            var threshold = 0.001f;
+
+            while (true)
+            {
+                var oldPositions = new List<Vector3>(newPositions);
+                foreach (var edgeLength in newLengths)
+                {
+                    var edgeVector = newPositions[edgeLength.Key.Index1] - newPositions[edgeLength.Key.Index2];
+                    var actualEdgeLength = edgeVector.Length();
+                    var springDirection = edgeVector / actualEdgeLength;
+                    var springForce = springDirection * (actualEdgeLength - edgeLength.Value) * springConst;
+                    newPositions[edgeLength.Key.Index1] -= springForce;
+                    newPositions[edgeLength.Key.Index2] += springForce;
+
+                    if (actualEdgeLength == 0)
+                    {
+                        Debugger.Break();
+                    }
+                }
+
+                var maxForce = newPositions.Select((p, i) => (p - oldPositions[i]).Length()).Max();
+                if (maxForce < threshold) break;
+            }
+
+            return newPositions.Select((p,i) => p  - manifold.Values[i]).ToArray();
+        }
+
+        public static Dictionary<Edge, float> CalcEdgeLengths(List<Vector3> positions, IManifold manifold) =>
+            manifold.Edges.
+            Select(e => (e, (positions[e.Index1] - positions[e.Index2]).Length())).
+            ToDictionary(kvp => kvp.e, kvp => kvp.Item2);
 
         private float AdjustSprings(List<Vector3> newPositions, IReadOnlyList<Vector3> originalPositions, TimeKY timestep)
         {

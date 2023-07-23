@@ -5,8 +5,9 @@ namespace WorldGeneratorFunctionalTests
 {
     public class LargeForcesStretchPlate : IFunctionalTest
     {
+        private static readonly float _planeSize = 10;
         private readonly PointCloudManifold _manifold;
-        private readonly Mesh _plane = Mesh.Plane(10);
+        private readonly Mesh _plane = Mesh.Plane((int)_planeSize);
         private readonly DeformationVelocitySolver _deformationVelocitySolver;
         private readonly IEnumerable<int> _centralVerts;
         private readonly FuncField<TN, Vector3> _forces;
@@ -17,11 +18,13 @@ namespace WorldGeneratorFunctionalTests
         public LargeForcesStretchPlate()
         {
             _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
+            var edgeIndexPos = (_planeSize / 2.0f) - 0.1f;
             var edgeIndices =
                 _manifold.Values.
                 Select((v, i) => (v, i)).
-                Where(v => v.v.X < -4 || v.v.X > 4).
-                Select(p => p.i);
+                Where(v => v.v.X < -edgeIndexPos || v.v.X > edgeIndexPos).
+                Select(p => p.i).
+                ToList();
 
             _centralVerts =
                 _manifold.Values.
@@ -35,7 +38,7 @@ namespace WorldGeneratorFunctionalTests
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X), 0, 0) :
+                new Vector3(v.X / MathF.Abs(v.X)   / 5.0f, 0, 0) :
                 Vector3.Zero);
                 
 
@@ -53,7 +56,7 @@ namespace WorldGeneratorFunctionalTests
 
         public IEnumerable<Vector3> Vertices => _manifold.Values;
 
-        public string Name => "Forces Stretch Plate";
+        public string Name => "Large Forces Stretch Plate";
 
         public State Update(GameTime gameTime)
         {
