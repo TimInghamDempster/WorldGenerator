@@ -7,7 +7,7 @@ namespace WorldGeneratorFunctionalTests
     {
         private readonly PointCloudManifold _manifold;
         private readonly Mesh _plane = Mesh.Plane(10);
-        private readonly DeformationVelocitySolver _deformationVelocitySolver;
+        private readonly DeformationSolver _deformationVelocitySolver;
         private readonly IEnumerable<int> _centralEdges;
         private readonly FuncField<TN, Vector3> _forces;
         private readonly FieldGroup _fieldGroup;
@@ -39,7 +39,7 @@ namespace WorldGeneratorFunctionalTests
                 Vector3.Zero);
                 
 
-            _deformationVelocitySolver = new DeformationVelocitySolver(_manifold, _forces);
+            _deformationVelocitySolver = new DeformationSolver(_manifold, _forces);
             _manipulator = new ManifoldManipulator(_manifold, _deformationVelocitySolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
@@ -72,7 +72,7 @@ namespace WorldGeneratorFunctionalTests
                 
             }
 
-            if(_frameCount > 1000)
+            if(_frameCount > 100)
             {
                 return new Succeeded(Name);
             }

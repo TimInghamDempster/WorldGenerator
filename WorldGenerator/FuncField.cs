@@ -28,16 +28,10 @@ namespace WorldGenerator
         {
             Manifold = manifold;
             _func = func;
-
-            Values = new TStorage[Manifold.Values.Length];
-
-            for(int i = 0; i < Manifold.Values.Length; i++)
-            {
-                Values[i] = _func(i, Manifold.Values[i]);
-            }
         }
 
-        public TStorage[] Values { get; }
+        public TStorage[] Values =>
+            Manifold.Values.Select((v, i) => _func(i, v)).ToArray();
 
         public void ProgressTime(TimeKY timestep)
         {

@@ -5,14 +5,14 @@ namespace WorldGenerator
     public class ManifoldManipulator : ITimeDependent
     {
         private readonly IManifold _manifold;
-        private readonly IField<MmPerKy, Vector3> _velocities;
+        private readonly IField<Mm, Vector3> _newPositions;
 
-        public ManifoldManipulator(IManifold manifold, IField<MmPerKy, Vector3> velocities)
+        public ManifoldManipulator(IManifold manifold, IField<Mm, Vector3> newPositions)
         {
             _manifold = manifold;
-            _velocities = velocities;
+            _newPositions = newPositions;
 
-            if(_manifold != _velocities.Manifold)
+            if(_manifold != _newPositions.Manifold)
             {
                 throw new ArgumentException("Manifolds must be the same");
             }
@@ -21,7 +21,7 @@ namespace WorldGenerator
         {
             for(int i = 0; i < _manifold.Values.Length; i++)
             {
-                _manifold.Values[i] += _velocities.Values[i] * timestep.Value;
+                _manifold.Values[i] = _newPositions.Values[i];
             }
         }
     }

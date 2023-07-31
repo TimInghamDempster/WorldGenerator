@@ -12,6 +12,7 @@ namespace WorldGeneratorFunctionalTests
         private float xThreshold = float.MinValue;
         private int _framecount;
         private readonly FieldGroup _fieldGroup;
+        private readonly GlobalFuncField<Mm, Vector3> _velocityApplier;
         private readonly ManifoldManipulator _manipulator;
 
         public CrustSinksWithAge()
@@ -21,7 +22,9 @@ namespace WorldGeneratorFunctionalTests
                 _manifold.Values.Select(p => Constants.OceanCrustDensityGTPerKm3 - 6.0f - p.X * 0.5f).ToArray();
             _densityField = new(_manifold, densities, new DensityChange(0.1f));
             _velocityField = new(_manifold, _densityField, new FuncField<Unitless, Vector3>(_manifold, (_, _)=> -Vector3.UnitY));
-            _manipulator = new ManifoldManipulator(_manifold, _velocityField);
+            _velocityApplier = new(_manifold, 
+                () => _manifold.Values.Select((p,i) => _velocityField.Values[i] + _manifold.Values[i]).ToArray());
+            _manipulator = new ManifoldManipulator(_manifold, _velocityApplier);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
             {
