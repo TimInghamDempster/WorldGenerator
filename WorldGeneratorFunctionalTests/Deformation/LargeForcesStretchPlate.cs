@@ -38,7 +38,7 @@ namespace WorldGeneratorFunctionalTests
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X)   / 5.0f, 0, 0) :
+                new Vector3(v.X / (MathF.Abs(v.X) / 10.0f), 0, 0) :
                 Vector3.Zero);
                 
 
@@ -67,7 +67,7 @@ namespace WorldGeneratorFunctionalTests
             var max = _manifold.Values[0].X;
             var min = _manifold.Values[0].X;
 
-            if (_centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 1.5f))
+            if (_centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 2.5f))
             {
                 return new Succeeded(Name);
             }

@@ -21,7 +21,8 @@ namespace WorldGeneratorFunctionalTests
                 _manifold.Values.
                 Select((v, i) => (v, i)).
                 Where(v => v.v.X < -4 || v.v.X > 4).
-                Select(p => p.i);
+                Select(p => p.i).
+                ToList();
 
             _originalPositions = _manifold.Values.ToArray();
 

@@ -7,116 +7,28 @@ namespace WorldGenerator
     {
         private readonly IField<TN, Vector3> _externalForces;
 
-        enum EdgeState
-        {
-            Intact,
-            Broken
-        }
-
         public IManifold Manifold { get; }
 
         public DeformationSolver(IManifold manifold, IField<TN, Vector3> externalForces)
         {
             Manifold = manifold;
             _externalForces = externalForces;
-            Values = new Vector3[Manifold.Values.Length];
+            Values = Manifold.Values.ToArray();
         }
 
         public Vector3[] Values { get; private set; }
 
         public void ProgressTime(TimeKY timestep)
         {
-            var brokenEdges = FindBrokenEdges(timestep);
+            var edgeLengths = ApplySpringForces(timestep);
 
-            var plates = SplitIntoPlates(Manifold, brokenEdges);
-
-            Values = MovePlates(Manifold, _externalForces, plates.Plates, timestep);
+            ApplyEdgeLengths(edgeLengths);
         }
 
-        private Vector3[] MovePlates(
-            IManifold manifold,
-            IField<TN, Vector3> externalForces, 
-            IReadOnlyList<Plate> plates,
-            TimeKY timestep)
-        {
-            var newPositions = new List<Vector3>(manifold.Values);
-
-            var refinementSteps = 10;
-            ApplyExternalForces(newPositions, externalForces, timestep);
-            for(int i = 0; i < refinementSteps; i++)
-            {
-                AdjustSprings(newPositions, manifold.Values, timestep);
-                ReconstructPlates(newPositions, plates);
-            }
-
-            return newPositions.ToArray();
-        }
-
-        private void ReconstructPlates(List<Vector3> newPositions, IReadOnlyList<Plate> plates)
-        {
-            foreach (var plate in plates)
-            {
-                var com = plate.Indices.Select(i => newPositions[i]).Aggregate((a, b) => a + b) / plate.Indices.Count;
-
-                for (int i = 0; i < plate.Indices.Count; i++)
-                {
-                    newPositions[plate.Indices[i]] = com + plate.RelativePositions[i];
-                }
-            }
-        }
-
-        private record World(IReadOnlyList<Plate> Plates, IReadOnlyList<int> Deformable);
-        private record Plate(IReadOnlyList<int> Indices, IReadOnlyList<Vector3> RelativePositions, Vector3 CoM);
-
-        private World SplitIntoPlates(IManifold manifold, Dictionary<Edge, EdgeState> brokenEdges)
-        {
-            var plates = new List<Plate>();
-            var notVisited = new HashSet<int>(Enumerable.Range(0, manifold.Values.Length));
-            var notConnected = new HashSet<int>();
-
-            while (notVisited.Any())
-            {
-                var indices = new List<int>();
-                var toVisit = new Queue<int>();
-                toVisit.Enqueue(notVisited.First());
-                notVisited.Remove(toVisit.Peek());
-
-                while (toVisit.Any())
-                {
-                    var current = toVisit.Dequeue();
-                    indices.Add(current);
-
-                    foreach (var neighbour in manifold.Neighbours[current].Indices)
-                    {
-                        if (notVisited.Contains(neighbour) && brokenEdges[new(current, neighbour)] == EdgeState.Intact)
-                        {
-                            toVisit.Enqueue(neighbour);
-                            notVisited.Remove(neighbour);
-                        }
-                    }
-                }
-
-                var com = indices.Select(i => manifold.Values[i]).Aggregate((a, b) => a + b) / indices.Count;
-                var relativePositions = indices.Select(i => manifold.Values[i] - com).ToList();
-
-                if (indices.Count > 1)
-                {
-                    plates.Add(new(indices, relativePositions, com));
-                }
-                else
-                {
-                    notConnected.Add(indices[0]);
-                }
-            }
-            return new(plates, notConnected.ToList());
-        }
-
-        private Dictionary<Edge, EdgeState> FindBrokenEdges(TimeKY timestep)
+        private Dictionary<Edge, float> ApplySpringForces(TimeKY timestep)
         {
             var newPositions = new List<Vector3>(Manifold.Values);
-            var edgeLengths = CalcEdgeLengths(newPositions, Manifold);
-
-            var brokenEdges = new Dictionary<Edge, EdgeState>();
+            var originalLengths = CalcEdgeLengths(newPositions, Manifold);
 
             float maxForce;
             ApplyExternalForces(newPositions, _externalForces, timestep);
@@ -136,19 +48,34 @@ namespace WorldGenerator
 
             var newLengths = CalcEdgeLengths(newPositions, Manifold);
 
-            var threshold = 0.00001f;
+            var threshold = 0.001f;
             foreach (var l in newLengths)
             {
-                var delta = newLengths[l.Key] - edgeLengths[l.Key];
+                var delta = newLengths[l.Key] - originalLengths[l.Key];
                 delta = delta * forceRatio;
 
-                brokenEdges.Add(l.Key, MathF.Abs(delta) > threshold ? 
-                    EdgeState.Broken : EdgeState.Intact);
+                newLengths[l.Key] = 
+                    delta > threshold ? originalLengths[l.Key] + delta : 
+                    originalLengths[l.Key];
             }
+            return newLengths;
+        }
 
-            Thread.Sleep(100);
-
-            return brokenEdges;
+        private void ApplyEdgeLengths(Dictionary<Edge, float> edges)
+        {
+            var iterations = 100;
+            for(int i = 0; i < iterations; i++)
+            {
+                foreach(var edge in edges.Keys)
+                {
+                    var dir = Values[edge.Index1] - Values[edge.Index2];
+                    var delta = edges[edge] - dir.Length();
+                    dir.Normalize();
+                    var springForce = delta * 0.5f;
+                    Values[edge.Index1] += dir * springForce;
+                    Values[edge.Index2] -= dir * springForce;
+                }
+            }    
         }
 
         public static Dictionary<Edge, float> CalcEdgeLengths(List<Vector3> positions, IManifold manifold) =>
