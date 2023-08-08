@@ -3,7 +3,7 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class CrustSinksWithAge : IFunctionalTest
+    public class Globe : IFunctionalTest
     {
         private readonly Mesh _plane = Mesh.Plane(10);
         private readonly BouyantVelocityField _velocityField;
@@ -15,7 +15,7 @@ namespace WorldGeneratorFunctionalTests
         private readonly GlobalFuncField<Mm, Vector3> _velocityApplier;
         private readonly ManifoldManipulator _manipulator;
 
-        public CrustSinksWithAge()
+        public Globe()
         {
             _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
             var densities =
@@ -38,7 +38,7 @@ namespace WorldGeneratorFunctionalTests
 
         public IEnumerable<Vector3> Vertices => _manifold.Values;
 
-        public string Name => "Crust Sinks with Age";
+        public string Name => "Globe";
 
         public State Update(GameTime gameTime)
         {
@@ -71,7 +71,7 @@ namespace WorldGeneratorFunctionalTests
 
             _framecount++;
 
-            return new Running();
+            return new Failed(Name, "Not Impleented");
         }
     }
 }

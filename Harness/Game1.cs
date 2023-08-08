@@ -42,10 +42,20 @@ namespace WorldGenerator
         private IReadOnlyList<IFunctionalTest> _tests =
             new List<IFunctionalTest>
             {
-                new CrustSinksWithAge(),
                 new LargeForcesStretchPlate(),
                 new SmallForcesDontStretchPlate(),
                 new PlateStretchesAtWeakPoint(),
+                new OldPlateSubductsSpontaneously(),
+                new DiscontinuityInducesSubduction(),
+                new RollbackCreatesContinent(),
+                new SubductionCreatesArcs(),
+                new CollisionRaisesMountains(),
+                new FlatSubductionRaisesPlateau(),
+                new SteepSubductionCreatesBackArc(),
+                new MountainsCauseFlexing(),
+                new SpreadingCreatesRidges(),
+                new WilsonCycle(),
+                new Globe(),
             };
         private State _status = new Running();
         private int _testIndex = -1;
