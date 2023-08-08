@@ -40,9 +40,11 @@ namespace WorldGeneratorFunctionalTests
                 (i, v) => edgeIndices.Contains(i) ?
                 new Vector3(v.X / (MathF.Abs(v.X) / 10.0f), 0, 0) :
                 Vector3.Zero);
-                
 
-            _deformationSolver = new DeformationSolver(_manifold, _forces);
+            var tensileStrength = new SimpleField<TNPerMm2, float>(
+                _manifold.Values.Select(_ => 1.0f).ToArray(), _manifold);
+
+            _deformationSolver = new DeformationSolver(_manifold, _forces, tensileStrength);
             _manipulator = new ManifoldManipulator(_manifold, _deformationSolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>

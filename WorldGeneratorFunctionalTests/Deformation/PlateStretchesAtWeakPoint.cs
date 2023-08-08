@@ -8,7 +8,7 @@ namespace WorldGeneratorFunctionalTests
         private readonly PointCloudManifold _manifold;
         private readonly Mesh _plane = Mesh.Plane(10);
         private readonly DeformationSolver _deformationVelocitySolver;
-        private readonly IEnumerable<int> _centralEdges;
+        private readonly List<int> _weakPoints;
         private readonly FuncField<TN, Vector3> _forces;
         private readonly FieldGroup _fieldGroup;
         private readonly ManifoldManipulator _manipulator;
@@ -24,11 +24,10 @@ namespace WorldGeneratorFunctionalTests
                 Select(p => p.i).
                 ToList();
 
-            _centralEdges =
+            _weakPoints =
                 _manifold.Values.
                 Select((v, i) => (v, i)).
                 Where(v => 
-                (v.v.X > -1.1 && v.v.X < -0.9) || 
                 (v.v.X > 0.9 && v.v.X < 1.1)).
                 Select(p => p.i).
                 ToList();
@@ -36,11 +35,16 @@ namespace WorldGeneratorFunctionalTests
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X), 0, 0) :
+                new Vector3(v.X * 2.0f / MathF.Abs(v.X), 0, 0) :
                 Vector3.Zero);
-                
 
-            _deformationVelocitySolver = new DeformationSolver(_manifold, _forces);
+
+            var tensileStrength = new SimpleField<TNPerMm2, float>(
+                _manifold.Values.Select(
+                    (v, i) => _weakPoints.Contains(i) ? 0.1f : 1.0f).ToArray(), _manifold);
+
+
+            _deformationVelocitySolver = new DeformationSolver(_manifold, _forces, tensileStrength);
             _manipulator = new ManifoldManipulator(_manifold, _deformationVelocitySolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
@@ -62,20 +66,25 @@ namespace WorldGeneratorFunctionalTests
             var time = new TimeKY(1);
             _fieldGroup.ProgressTime(time);
 
-            var max = _manifold.Values[0].X;
-            var min = _manifold.Values[0].X;
+            var stretchedEdges =
+                DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
+                Where(l => l.Value > 2.0f);
 
-            var edgeLengths = new List<float>();
-
-
-            if (_centralEdges.All(i => MathF.Abs(_manifold.Values[i].X) > 1.5f))
-            {
-                
-            }
-
-            if(_frameCount > 100)
+            if (_weakPoints.All(i => 
+            stretchedEdges.Any(
+                e => e.Key.Index1 == i || e.Key.Index2 == i)))
             {
                 return new Succeeded(Name);
+            }
+
+            if(stretchedEdges.Any(e => !_weakPoints.Contains(e.Key.Index1) && !_weakPoints.Contains(e.Key.Index2)))
+            {
+                return new Failed(Name, "Stretched at non-weak point");
+            }
+
+            if(_frameCount > 1000)
+            {
+                return new Failed(Name, "Did not stretch in 1000 frames");
             }
 
             return new Running();

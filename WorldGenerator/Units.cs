@@ -11,6 +11,7 @@ namespace WorldGenerator
     public interface IKy : IUnit { }
     public interface TNPerKm3 : IUnit { }
     public interface TN : IUnit { }
+    public interface TNPerMm2 : IUnit { }
     public interface IVectorValued<TUnit> where TUnit : IUnit { Vector3 Value { get; } }
     public interface IFloatValued<TUnit> where TUnit : IUnit { float Value { get; } }
     public record struct TimeKY(float Value) : IFloatValued<IKy>;

@@ -6,13 +6,15 @@ namespace WorldGenerator
     public class DeformationSolver : IField<Mm, Vector3>, ITimeDependent
     {
         private readonly IField<TN, Vector3> _externalForces;
+        private readonly IField<TNPerMm2, float> _tensileStrength;
 
         public IManifold Manifold { get; }
 
-        public DeformationSolver(IManifold manifold, IField<TN, Vector3> externalForces)
+        public DeformationSolver(IManifold manifold, IField<TN, Vector3> externalForces, IField<TNPerMm2, float> tensileStrength)
         {
             Manifold = manifold;
             _externalForces = externalForces;
+            this._tensileStrength = tensileStrength;
             Values = Manifold.Values.ToArray();
         }
 
@@ -35,7 +37,7 @@ namespace WorldGenerator
             do
             {
                 maxForce = AdjustSprings(newPositions, Manifold.Values, timestep);
-            } while (maxForce > 0.1f);
+            } while (maxForce > 0.05f);
 
             var targetForceMagnitude = _externalForces.Values.Sum(v => v.Length());
             var currentForceMagnitude =
@@ -48,14 +50,14 @@ namespace WorldGenerator
 
             var newLengths = CalcEdgeLengths(newPositions, Manifold);
 
-            var threshold = 0.001f;
+            var threshold = 0.01f;
             foreach (var l in newLengths)
             {
                 var delta = newLengths[l.Key] - originalLengths[l.Key];
                 delta = delta * forceRatio;
 
                 newLengths[l.Key] = 
-                    delta > threshold ? originalLengths[l.Key] + delta : 
+                    MathF.Abs(delta) > threshold ? originalLengths[l.Key] + delta : 
                     originalLengths[l.Key];
             }
             return newLengths;
@@ -100,11 +102,13 @@ namespace WorldGenerator
                         continue;
                     }
 
+                    var edgeStrength = (_tensileStrength.Values[i] + _tensileStrength.Values[neighbour]) * 0.5f;
+
                     var spring = newPositions[i] - newPositions[neighbour];
                     var originalLength = (originalPositions[i] - originalPositions[neighbour]).Length();
                     var springLength = spring.Length();
                     var springDirection = spring / springLength;
-                    var springForce = springDirection * (springLength - originalLength);
+                    var springForce = springDirection * (springLength - originalLength) * edgeStrength;
                     forces[i] -= springForce;
                     forces[neighbour] += springForce;
 
