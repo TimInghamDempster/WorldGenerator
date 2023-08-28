@@ -25,18 +25,38 @@ namespace WorldGenerator
 
         public void ProgressTime(TimeKY timestep)
         {
-            var currentPositions = new List<Vector3>(Manifold.Values);
             var edgeLengths = ApplySpringForces(timestep);
             
-            var iterations = 10;
-            for (int i = 0; i < iterations; i++)
+            var softBodyPositions = ApplyEdgeLengths(edgeLengths.NewLengths);
+            var parts = SeparateParts(softBodyPositions, Manifold.Connectivity, edgeLengths.Broken.Edges);
+
+            Values = MoveByParts(
+                Manifold.Values,
+                softBodyPositions,
+                parts);
+        }
+
+        private Vector3[] MoveByParts(Vector3[] originalValues, Vector3[] softBodyPositions, IReadOnlyList<MeshPart> parts)
+        {
+            var newPositions = new List<Vector3>(originalValues);
+            foreach(var part in parts)
             {
-                ApplyEdgeLengths(edgeLengths.NewLengths);
+                var partPositions = part.Indices.Select(i => softBodyPositions[i]).ToArray();
+                var partOriginalPositions = part.Indices.Select(i => originalValues[i]).ToArray();
+                var partCenter = partPositions.Aggregate((a, b) => a + b) / partPositions.Length;
+                var partOriginalCenter = partOriginalPositions.Aggregate((a, b) => a + b) / partOriginalPositions.Length;
+                var partDelta = partCenter - partOriginalCenter;
+                for (var i = 0; i < part.Indices.Count(); i++)
+                {
+                    newPositions[part.Indices[i]] += partDelta;
+                }
             }
+
+            return newPositions.ToArray();
         }
 
         private record EdgeLengths(Dictionary<Edge, float> Lengths);
-        public record BrokenEdges(HashSet<Edge> Indices);
+        public record BrokenEdges(HashSet<Edge> Edges);
 
         private (BrokenEdges Broken, EdgeLengths NewLengths) ApplySpringForces(TimeKY timestep)
         {
@@ -46,10 +66,11 @@ namespace WorldGenerator
 
             float maxForce;
             ApplyExternalForces(newPositions, _externalForces, timestep);
-            do
+            int iterations = 100;
+            for(int iteration = 0; iteration < iterations; iteration++)
             {
                 maxForce = AdjustSprings(newPositions, Manifold.Values, timestep);
-            } while (maxForce > 0.05f);
+            }
 
             var targetForceMagnitude = _externalForces.Values.Sum(v => v.Length());
             var currentForceMagnitude =
@@ -58,7 +79,7 @@ namespace WorldGenerator
                 Select((v, i) => (v, i)).
                 Sum(vi => (vi.v - Manifold.Values[vi.i]).Length());
 
-            var forceRatio = targetForceMagnitude / currentForceMagnitude;
+            var forceRatio = 1.0f / 2.0f;
 
             var newLengths = CalcEdgeLengths(newPositions, Manifold);
 
@@ -81,21 +102,29 @@ namespace WorldGenerator
             return (new(brokenEdges), new(newLengths));
         }
 
-        private void ApplyEdgeLengths(EdgeLengths edges)
+        private Vector3[] ApplyEdgeLengths(EdgeLengths edges)
         {
-            foreach(var edge in edges.Lengths.Keys)
+            var currentPositions = Manifold.Values.ToArray();
+
+            var iterations = 100;
+            for (int i = 0; i < iterations; i++)
             {
-                var dir = Values[edge.Index1] - Values[edge.Index2];
-                var delta = edges.Lengths[edge] - dir.Length();
-                dir.Normalize();
-                var springForce = delta * 0.5f;
-                Values[edge.Index1] += dir * springForce;
-                Values[edge.Index2] -= dir * springForce;
+                foreach (var edge in edges.Lengths.Keys)
+                {
+                    var dir = currentPositions[edge.Index1] - currentPositions[edge.Index2];
+                    var delta = edges.Lengths[edge] - dir.Length();
+                    dir.Normalize();
+                    var springForce = delta * 0.5f;
+                    currentPositions[edge.Index1] += dir * springForce;
+                    currentPositions[edge.Index2] -= dir * springForce;
+                }
             }
+
+            return currentPositions;
         }
 
         public static Dictionary<Edge, float> CalcEdgeLengths(List<Vector3> positions, IManifold manifold) =>
-            manifold.Edges.
+            manifold.Connectivity.Edges.
             Select(e => (e, (positions[e.Index1] - positions[e.Index2]).Length())).
             ToDictionary(kvp => kvp.e, kvp => kvp.Item2);
 
@@ -152,10 +181,11 @@ namespace WorldGenerator
             }
         }
         public record MeshPart(IReadOnlyList<int> Indices);
+        public record Connectivity(HashSet<Edge> Edges);
 
-        public static IReadOnlyList<MeshPart> SeparateParts(PointCloudManifold manifold, IEnumerable<Edge> brokenEdges)
+        public static IReadOnlyList<MeshPart> SeparateParts(Vector3[] positions, Connectivity connectivity, IEnumerable<Edge> brokenEdges)
         {
-            var parts = manifold.Values.Select(
+            var parts = positions.Select(
                 (v,i) => new MeshPart(new List<int>() { i })).
                 ToList();
 
@@ -168,7 +198,7 @@ namespace WorldGenerator
                 }
             }
 
-            foreach(var edge in manifold.Edges)
+            foreach(var edge in connectivity.Edges)
             {
                 if(brokenEdges.Contains(edge))
                 {

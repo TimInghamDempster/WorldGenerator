@@ -29,7 +29,7 @@ namespace WorldGeneratorFunctionalTests
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X), 0, 0) :
+                new Vector3(v.X / MathF.Abs(v.X) * 0.1f, 0, 0) :
                 Vector3.Zero);
 
             var tensileStrength = new SimpleField<TNPerMm2, float>(

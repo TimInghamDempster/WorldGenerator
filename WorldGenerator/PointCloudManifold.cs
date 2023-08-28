@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using static WorldGenerator.DeformationSolver;
 
 namespace WorldGenerator
 {
@@ -10,7 +11,7 @@ namespace WorldGenerator
 
         public Dictionary<int, Neighbours> Neighbours { get; }
 
-        public HashSet<Edge> Edges { get; }
+        public Connectivity Connectivity { get; }
 
         public PointCloudManifold(Vector3[] positions, IEnumerable<Face> faces)
         {
@@ -22,14 +23,14 @@ namespace WorldGenerator
                     SelectMany(f => f.Indices.Where(fi => fi > i)).ToArray()))).
                     ToDictionary(kvp => kvp.i, kvp => kvp.Item2);
 
-            Edges = new HashSet<Edge>(
+            Connectivity = new(new HashSet<Edge>(
                 faces.
                 SelectMany(f => 
                     f.Indices.
                     SelectMany(i => 
                         f.Indices.
                         Where(j => j > i).
-                        Select(j => new Edge(i, j)))));
+                        Select(j => new Edge(i, j))))));
         }
     }
 }

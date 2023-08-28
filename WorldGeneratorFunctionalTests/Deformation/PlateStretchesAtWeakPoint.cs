@@ -28,7 +28,7 @@ namespace WorldGeneratorFunctionalTests
                 _manifold.Values.
                 Select((v, i) => (v, i)).
                 Where(v => 
-                (v.v.X > 0.9 && v.v.X < 1.1)).
+                (v.v.X > 0.9 && v.v.X < 2.1)).
                 Select(p => p.i).
                 ToList();
 
@@ -68,7 +68,7 @@ namespace WorldGeneratorFunctionalTests
 
             var stretchedEdges =
                 DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
-                Where(l => l.Value > 2.0f);
+                Where(l => l.Value > 4.0f);
 
             if (_weakPoints.All(i => 
             stretchedEdges.Any(

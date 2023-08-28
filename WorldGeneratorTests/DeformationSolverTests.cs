@@ -13,11 +13,11 @@ namespace WorldGeneratorTests
             var mesh = Mesh.Plane(2);
             var manifold = new PointCloudManifold(mesh.Vertices.ToArray(), mesh.Faces);
 
-            var brokenEdges = manifold.Edges.Where(
+            var brokenEdges = manifold.Connectivity.Edges.Where(
                 e => mesh.Vertices[e.Index1].Z != mesh.Vertices[e.Index2].Z);
 
             // Act
-            var parts = DeformationSolver.SeparateParts(manifold, brokenEdges);
+            var parts = DeformationSolver.SeparateParts(manifold.Values, manifold.Connectivity, brokenEdges);
 
             // Assert
             parts.Count().Should().Be(3);

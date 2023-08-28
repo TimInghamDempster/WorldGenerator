@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using static WorldGenerator.DeformationSolver;
 
 namespace WorldGenerator
 {
@@ -9,7 +10,7 @@ namespace WorldGenerator
     public interface IManifold : IField<Mm, Vector3>
     {
         Dictionary<int, Neighbours> Neighbours { get; }
-        HashSet<Edge> Edges { get; }
+        Connectivity Connectivity { get; }
     }
 
     public interface ITimeDependent
