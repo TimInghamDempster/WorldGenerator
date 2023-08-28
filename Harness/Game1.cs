@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using WorldGeneratorFunctionalTests;
 
 namespace WorldGenerator
@@ -129,16 +128,19 @@ namespace WorldGenerator
 
             if (_status is not Running) return;
 
-            try
+            if (_frameCount % 10 == 0)
             {
-                _status = _currentTest.Update(gameTime);
+                try
+                {
+                    _status = _currentTest.Update(gameTime);
 
-                if (_status is not Running) SetNextTest();
-            }
-            catch (Exception e)
-            {
-                _status = new Failed(_currentTest.Name, e.Message);
-                SetNextTest();
+                    if (_status is not Running) SetNextTest();
+                }
+                catch (Exception e)
+                {
+                    _status = new Failed(_currentTest.Name, e.Message);
+                    SetNextTest();
+                }
             }
             base.Update(gameTime);
         }

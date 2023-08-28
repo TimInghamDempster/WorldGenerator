@@ -17,6 +17,7 @@ namespace WorldGenerator
                 throw new ArgumentException("Manifolds must be the same");
             }
         }
+
         public void ProgressTime(TimeKY timestep)
         {
             for(int i = 0; i < _manifold.Values.Length; i++)

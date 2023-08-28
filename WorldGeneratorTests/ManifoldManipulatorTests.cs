@@ -24,7 +24,6 @@ namespace WorldGeneratorTests
             manipulator.ProgressTime(new TimeKY(1));
         }
 
-
         [TestMethod]
         public void AppliesVelocity()
         {

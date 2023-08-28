@@ -4,16 +4,14 @@ namespace WorldGenerator
 {
     public record Face(int Index1, int Index2, int Index3)
     {
-        public IEnumerable<int> Indices
+        public IReadOnlyList<int> Indices { get; } = new List<int>()
         {
-            get
-            {
-                yield return Index1;
-                yield return Index2;
-                yield return Index3;
-            }
-        }
+            Index1,
+            Index2,
+            Index3
+        };
     }
+    
 
     public record Mesh(IReadOnlyList<Face> Faces, IReadOnlyList<Vector3> Vertices)
     {
