@@ -35,7 +35,7 @@ namespace WorldGeneratorFunctionalTests
             var tensileStrength = new SimpleField<TNPerMm2, float>(
                 _manifold.Values.Select(_ => 1.0f).ToArray(), _manifold);
 
-            _deformationSolver = new DeformationSolver(_manifold, _forces, tensileStrength, _plane);
+            _deformationSolver = new DeformationSolver(_manifold, _forces, tensileStrength);
             _manipulator = new ManifoldManipulator(_manifold, _deformationSolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>

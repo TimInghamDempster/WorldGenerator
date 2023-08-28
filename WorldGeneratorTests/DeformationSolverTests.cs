@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.Xna.Framework;
 using WorldGenerator;
 
 namespace WorldGeneratorTests
@@ -8,53 +7,23 @@ namespace WorldGeneratorTests
     public class DeformationSolverTests
     {
         [TestMethod]
-        public void AngleConstraint()
+        public void SeparatesParts()
         {
-            var mesh = new Mesh(new Face[]
-            {
-                new Face(0, 1, 2)
-            }, new Vector3[]
-            {
-                new Vector3(0, 0, 1),
-                new Vector3(1, 0, 0),
-                new Vector3(1, 1, 0)
-            });
-
-            var initialAngles = DeformationSolver.VertexCombinations.Select(
-                c => DeformationSolver.CalcAngle(mesh.Vertices, c[0], c[1], c[2])).
-                ToList();
-
+            // Arrange
+            var mesh = Mesh.Plane(2);
             var manifold = new PointCloudManifold(mesh.Vertices.ToArray(), mesh.Faces);
 
-            var defSolver = new DeformationSolver(manifold, )
+            var brokenEdges = manifold.Edges.Where(
+                e => mesh.Vertices[e.Index1].Z != mesh.Vertices[e.Index2].Z);
 
-            var initialNorm = Vector3.Cross(
-                manifold.Values[1] - manifold.Values[0],
-                manifold.Values[2] - manifold.Values[0]);
+            // Act
+            var parts = DeformationSolver.SeparateParts(manifold, brokenEdges);
 
-            manifold.Values[0] = new Vector3(0.3f, 0, 1);
-
-            var midAngles = DeformationSolver.VertexCombinations.Select(
-                c => DeformationSolver.CalcAngle(manifold.Values, c[0], c[1], c[2])).
-                ToList();
-
-            DeformationSolver.ApplyAngleConstraint(mesh.Vertices, mesh.Faces, new(new()));
-
-            var endAngles = DeformationSolver.VertexCombinations.Select(
-                c => DeformationSolver.CalcAngle(manifold.Values, c[0], c[1], c[2])).
-                ToList();
-
-            var finalNorm = Vector3.Cross(
-                manifold.Values[1] - manifold.Values[0],
-                manifold.Values[2] - manifold.Values[0]);
-
-            for (int i = 0; i < initialAngles.Count(); i++)
-            {
-                var diff = MathF.Abs(endAngles[i] - initialAngles[i]);
-                diff.Should().BeLessThan(0.001f);
-            }
-
-            Vector3.Dot(initialNorm, finalNorm).Should().BeGreaterThan(0.0f);
+            // Assert
+            parts.Count().Should().Be(3);
+            parts[0].Indices.Should().BeEquivalentTo(new[] { 0, 1, 2});
+            parts[1].Indices.Should().BeEquivalentTo(new[] { 3, 4, 5});
+            parts[2].Indices.Should().BeEquivalentTo(new[] { 6, 7, 8 });
         }
     }
 }

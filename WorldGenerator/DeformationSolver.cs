@@ -7,20 +7,17 @@ namespace WorldGenerator
     {
         private readonly IField<TN, Vector3> _externalForces;
         private readonly IField<TNPerMm2, float> _tensileStrength;
-        private readonly Mesh _mesh;
 
         public IManifold Manifold { get; }
 
         public DeformationSolver(
             IManifold manifold,
             IField<TN, Vector3> externalForces,
-            IField<TNPerMm2, float> tensileStrength, 
-            Mesh mesh)
+            IField<TNPerMm2, float> tensileStrength)
         {
             Manifold = manifold;
             _externalForces = externalForces;
             _tensileStrength = tensileStrength;
-            _mesh = mesh;
             Values = Manifold.Values.ToArray();
         }
 
@@ -35,18 +32,17 @@ namespace WorldGenerator
             for (int i = 0; i < iterations; i++)
             {
                 ApplyEdgeLengths(edgeLengths.NewLengths);
-                ApplyAngleConstraint(currentPositions, _mesh.Faces, edgeLengths.Broken);
             }
         }
 
         private record EdgeLengths(Dictionary<Edge, float> Lengths);
-        public record IndicesWithBrokenEdges(HashSet<int> Indices);
+        public record BrokenEdges(HashSet<Edge> Indices);
 
-        private (IndicesWithBrokenEdges Broken, EdgeLengths NewLengths) ApplySpringForces(TimeKY timestep)
+        private (BrokenEdges Broken, EdgeLengths NewLengths) ApplySpringForces(TimeKY timestep)
         {
             var newPositions = new List<Vector3>(Manifold.Values);
             var originalLengths = CalcEdgeLengths(newPositions, Manifold);
-            var brokenIndices = new HashSet<int>();
+            var brokenEdges = new HashSet<Edge>();
 
             float maxForce;
             ApplyExternalForces(newPositions, _externalForces, timestep);
@@ -75,15 +71,14 @@ namespace WorldGenerator
                 if (MathF.Abs(delta) > threshold)
                 {
                     newLengths[l.Key] = originalLengths[l.Key] + delta;
-                    brokenIndices.Add(l.Key.Index1);
-                    brokenIndices.Add(l.Key.Index2);
+                    brokenEdges.Add(l.Key);
                 }
                 else
                 {
                     newLengths[l.Key] = originalLengths[l.Key];
                 }
             }
-            return (new(brokenIndices), new(newLengths));
+            return (new(brokenEdges), new(newLengths));
         }
 
         private void ApplyEdgeLengths(EdgeLengths edges)
@@ -156,82 +151,49 @@ namespace WorldGenerator
                 newPositions[i] += externalForces.Values[i] * timestep.Value;
             }
         }
+        public record MeshPart(IReadOnlyList<int> Indices);
 
-        public static int[][] VertexCombinations { get; } =
-            new int[][]
-            {
-                new int[] { 0, 1, 2 },
-                new int[] { 1, 2, 0 },
-                new int[] { 2, 0, 1 }
-            };
-
-        public void ApplyAngleConstraint(
-            IReadOnlyList<Vector3> originalVertices, 
-            IReadOnlyList<Face> faces,
-            IndicesWithBrokenEdges broken)
+        public static IReadOnlyList<MeshPart> SeparateParts(PointCloudManifold manifold, IEnumerable<Edge> brokenEdges)
         {
-            foreach (var face in faces)
+            var parts = manifold.Values.Select(
+                (v,i) => new MeshPart(new List<int>() { i })).
+                ToList();
+
+            var partsByIndex = new Dictionary<int, MeshPart>();
+            foreach(var part in parts)
             {
-                if(face.Indices.Any(i => broken.Indices.Contains(i)))
+                foreach(var index in part.Indices)
+                {
+                    partsByIndex[index] = part;
+                }
+            }
+
+            foreach(var edge in manifold.Edges)
+            {
+                if(brokenEdges.Contains(edge))
                 {
                     continue;
                 }
-                foreach (var combo in VertexCombinations)
+
+                var part1 = partsByIndex[edge.Index1];
+                var part2 = partsByIndex[edge.Index2];
+                if(part1 == part2)
                 {
-                    var v0 = Values[face.Indices[combo[0]]];
-                    var v1 = Values[face.Indices[combo[1]]];
-                    var v2 = Values[face.Indices[combo[2]]];
-
-                    var o0 = originalVertices[face.Indices[combo[0]]];
-                    var o1 = originalVertices[face.Indices[combo[1]]];
-                    var o2 = originalVertices[face.Indices[combo[2]]];
-
-
-                    var a = v1 - v0;
-                    var b = v2 - v0;
-                    var h = Vector3.Normalize(a + b);
-                    var originalNorm = Vector3.Cross(a, b);
-
-                    var oa = o1 - o0;
-                    var ob = o2 - o0;
-
-                    var oaAngle = CalcAngle(originalVertices,
-                        face.Indices[combo[0]], face.Indices[combo[1]], face.Indices[combo[2]]);
-
-                    var axis = Vector3.Normalize(Vector3.Cross(a, h));
-
-                    var rotation = Matrix.CreateFromAxisAngle(axis, oaAngle * 0.5f);
-                    var rotation2 = Matrix.CreateFromAxisAngle(axis, oaAngle * -0.5f);
-
-                    var newV1 = Vector3.Transform(h * oa.Length(), rotation2) + v0;
-                    var newV2 = Vector3.Transform(h * ob.Length(), rotation) + v0;
-
-                    Values[face.Indices[combo[1]]] = newV1;
-                    Values[face.Indices[combo[2]]] = newV2;
-                    var newNorm = Vector3.Cross(newV1 - v0, newV2 - v0);
-
-                    /*if(Vector3.Dot(newNorm, originalNorm) < 0)
-                    {
-                        Values[face.Indices[combo[1]]] = newV2;
-                        Values[face.Indices[combo[2]]] = newV1;
-                    }*/
+                    continue;
                 }
+
+                var newPart = new MeshPart(part1.Indices.Concat(part2.Indices).ToList());
+                foreach(var index in newPart.Indices)
+                {
+                    partsByIndex[index] = newPart;
+                }
+
+                parts.Remove(part1);
+                parts.Remove(part2);
+                parts.Add(newPart);
             }
-        }
 
-        public static float CalcAngle(IReadOnlyList<Vector3> vertices,
-            int centerIndex, int endOne, int endTwo)
-        {
-            var v0 = vertices[centerIndex];
-            var v1 = vertices[endOne];
-            var v2 = vertices[endTwo];
-
-            var a = v1 - v0;
-            var b = v2 - v0;
-
-            var angle = Vector3.Dot(a, b) / (a.Length() * b.Length());
-
-            return MathF.Acos(angle);
+            return parts;
         }
     }
 }
