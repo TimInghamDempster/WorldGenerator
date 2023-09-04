@@ -38,8 +38,8 @@ namespace WorldGenerator
 
         private RenderMode _renderMode = RenderMode.Perspective;
 
-        private IReadOnlyList<IFunctionalTest> _tests =
-            new List<IFunctionalTest>
+        private IReadOnlyList<FunctionalTest> _tests =
+            new List<FunctionalTest>
             {
                 new LargeForcesStretchPlate(),
                 new SmallForcesDontStretchPlate(),
@@ -59,7 +59,7 @@ namespace WorldGenerator
         private TestResult? _status;
         private int _testIndex = -1;
         private List<TestResult> _results = new();
-        private IFunctionalTest _currentTest;
+        private FunctionalTest _currentTest;
 
         public Game1()
         {
@@ -110,7 +110,7 @@ namespace WorldGenerator
             catch { }
 
             _currentTest = _tests[_testIndex]; 
-            _results.Insert(0, new( new Running(_currentTest.Name()), Enumerable.Empty<State>()));
+            _results.Insert(0, new( new Running(_currentTest.Name), Enumerable.Empty<State>()));
 
             _status = null;
         }
@@ -142,7 +142,7 @@ namespace WorldGenerator
                 catch (Exception e)
                 {
                     _status = new(
-                        new Failed(_currentTest.Name() + ", threw: " + e.Message),
+                        new Failed(_currentTest.Name + ", threw: " + e.Message),
                         Enumerable.Empty<State>());
                     _results[0] = _status;
 

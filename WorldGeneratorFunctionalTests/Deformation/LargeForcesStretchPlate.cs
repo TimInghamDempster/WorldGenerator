@@ -3,21 +3,18 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class LargeForcesStretchPlate : IFunctionalTest
+    public class LargeForcesStretchPlate : FunctionalTest
     {
         private static readonly float _planeSize = 10;
-        private readonly PointCloudManifold _manifold;
-        private readonly Mesh _plane = Mesh.Plane((int)_planeSize);
         private readonly DeformationSolver _deformationSolver;
         private readonly IEnumerable<int> _centralVerts;
         private readonly FuncField<TN, Vector3> _forces;
-        private readonly FieldGroup _fieldGroup;
         private readonly ManifoldManipulator _manipulator;
-        private int _frameCount;
 
         public LargeForcesStretchPlate()
         {
-            _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
+            _mesh = Mesh.Plane((int)_planeSize);
+            _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
             var edgeIndexPos = (_planeSize / 2.0f) - 0.1f;
             var edgeIndices =
                 _manifold.Values.
@@ -54,7 +51,7 @@ namespace WorldGeneratorFunctionalTests
                 _manipulator
             });
 
-            Criteria = new TestCriteria(
+            _criteria = new TestCriteria(
                 100, TimeoutResult.TimedOut,
                 new List<ICondition>()
                 {
@@ -62,28 +59,14 @@ namespace WorldGeneratorFunctionalTests
                 });
         }
 
-        public int FrameCount => _frameCount;
         private bool PlateStretched()
         {
+            if (_manifold is null) return false;
+
             var max = _manifold.Values[0].X;
             var min = _manifold.Values[0].X;
 
             return _centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 2.5f);
-        }
-
-        public IReadOnlyList<Face> Faces => _plane.Faces;
-
-        public IEnumerable<Vector3> Vertices => _manifold.Values;
-
-        public string Name => "Large Forces Stretch Plate";
-
-        public TestCriteria Criteria { get; }
-
-        public void Update(GameTime gameTime)
-        {
-            _frameCount++;
-            var time = new TimeKY(1);
-            _fieldGroup.ProgressTime(time);
         }
     }
 }

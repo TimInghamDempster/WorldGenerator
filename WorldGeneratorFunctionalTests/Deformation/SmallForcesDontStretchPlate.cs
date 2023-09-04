@@ -3,20 +3,17 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class SmallForcesDontStretchPlate : IFunctionalTest
+    public class SmallForcesDontStretchPlate : FunctionalTest
     {
-        private readonly PointCloudManifold _manifold;
-        private readonly Mesh _plane = Mesh.Plane(10);
         private readonly DeformationSolver _deformationSolver;
         private readonly Vector3[] _originalPositions;
         private readonly FuncField<TN, Vector3> _forces;
-        private readonly FieldGroup _fieldGroup;
         private readonly ManifoldManipulator _manipulator;
-        private int _frameCount;
 
         public SmallForcesDontStretchPlate()
         {
-            _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
+            _mesh = Mesh.Plane(10);
+            _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
             var edgeIndices =
                 _manifold.Values.
                 Select((v, i) => (v, i)).
@@ -45,29 +42,14 @@ namespace WorldGeneratorFunctionalTests
                 _manipulator
             });
 
-            Criteria = new TestCriteria(100, TimeoutResult.Completed, new List<ICondition>()
+            _criteria = new TestCriteria(100, TimeoutResult.Completed, new List<ICondition>()
             {
                 new ShouldNot(PlateStretched, "Plate Stretched Despite Insufficient Force"),
             });
         }
 
         private bool PlateStretched() =>
-            _manifold.Values.Select((p, i) => (p, i)).Any(v => _originalPositions[v.i] != v.p);
-
-        public IReadOnlyList<Face> Faces => _plane.Faces;
-
-        public IEnumerable<Vector3> Vertices => _manifold.Values;
-        public int FrameCount => _frameCount;
-
-        public string Name => "Small Forces Don't Stretch Plate";
-
-        public TestCriteria Criteria { get; }
-
-        public void Update(GameTime gameTime)
-        {
-            _frameCount++;
-            var time = new TimeKY(1);
-            _fieldGroup.ProgressTime(time);
-        }
+            _manifold?.Values.Select((p, i) => (p, i)).Any(v => _originalPositions[v.i] != v.p) ??
+            false;
     }
 }

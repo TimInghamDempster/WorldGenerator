@@ -3,20 +3,17 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class PlateStretchesAtWeakPoint : IFunctionalTest
+    public class PlateStretchesAtWeakPoint : FunctionalTest
     {
-        private readonly PointCloudManifold _manifold;
-        private readonly Mesh _plane = Mesh.Plane(10);
         private readonly DeformationSolver _deformationVelocitySolver;
         private readonly List<int> _weakPoints;
         private readonly FuncField<TN, Vector3> _forces;
-        private readonly FieldGroup _fieldGroup;
         private readonly ManifoldManipulator _manipulator;
-        private int _frameCount;
 
         public PlateStretchesAtWeakPoint()
         {
-            _manifold = new PointCloudManifold(_plane.Vertices.ToArray(), _plane.Faces);
+            _mesh = Mesh.Plane(10);
+            _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
             var edgeIndices =
                 _manifold.Values.
                 Select((v, i) => (v, i)).
@@ -54,16 +51,17 @@ namespace WorldGeneratorFunctionalTests
                 _manipulator
             });
 
-            Criteria = new(1000, TimeoutResult.TimedOut, new List<ICondition>
+            _criteria = new(1000, TimeoutResult.TimedOut, new List<ICondition>
             {
                   new Should(StretchedAtWeakPoint, "Stretched at weak point"),
                   new ShouldNot(StretchedAtNormalPoint, "Did not stretch at normal point")
             });
         }
-        public int FrameCount => _frameCount;
-
+        
         private bool StretchedAtNormalPoint()
         {
+            if(_manifold == null) return false;
+            
             var stretchedEdges =
                 DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
                 Where(l => l.Value > 4.0f);
@@ -75,6 +73,8 @@ namespace WorldGeneratorFunctionalTests
 
         private bool StretchedAtWeakPoint()
         {
+            if (_manifold == null) return false;
+
             var stretchedEdges =
                 DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
                 Where(l => l.Value > 4.0f);
@@ -82,21 +82,6 @@ namespace WorldGeneratorFunctionalTests
             return _weakPoints.All(i =>
             stretchedEdges.Any(
                 e => e.Key.Index1 == i || e.Key.Index2 == i));
-        }
-
-        public IReadOnlyList<Face> Faces => _plane.Faces;
-
-        public IEnumerable<Vector3> Vertices => _manifold.Values;
-
-        public string Name => "Stretches At Weak Point";
-
-        public TestCriteria Criteria { get; }
-
-        public void Update(GameTime gameTime)
-        {
-            _frameCount++;
-            var time = new TimeKY(1);
-            _fieldGroup.ProgressTime(time);
         }
     }
 }

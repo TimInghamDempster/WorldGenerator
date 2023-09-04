@@ -60,41 +60,59 @@ namespace WorldGeneratorFunctionalTests
 
     public record TestResult(State OverallState, IEnumerable<State> SubStates);
 
-    public static class TestExtensions
+    public class FunctionalTest
     {
-        public static string Name(this IFunctionalTest test) => 
-            test.GetType().Name.Replace('_', ' ');
-        public static TestResult Evaluate(this IFunctionalTest test)
+        public IReadOnlyList<Face> Faces => 
+            _mesh?.Faces ?? throw new NotImplementedException();
+        public IEnumerable<Vector3> Vertices =>
+            _manifold?.Values ?? throw new NotImplementedException();
+        public void Update(GameTime gameTime)
         {
+            var time = new TimeKY(1);
+            _fieldGroup?.ProgressTime(time);
+            FrameCount++;
+        }
+
+        protected TestCriteria? _criteria;
+        protected Mesh? _mesh;
+        protected IManifold? _manifold;
+        protected FieldGroup? _fieldGroup;
+        public string Name =>
+            GetType().Name.Replace('_', ' ');
+
+        public TestResult Evaluate()
+        {
+            if (_criteria is null) throw new InvalidOperationException("Test has not been initialized");
+
             var frameCount = 0;
             var states = new List<(State, ICondition)>();
-            frameCount = test.FrameCount;
+            frameCount = FrameCount;
 
-            foreach(var condition in test.Criteria.Conditions)
+            foreach (var condition in _criteria.Conditions)
             {
                 states.Add(new(condition.Evaluate(), condition));
             }
 
-            var overallState = 
+            var overallState =
                 states.Any(static s => s.Item1 is Failed) ?
-                (State)new Failed(test.Name()) :
+                (State)new Failed(Name) :
                 states.All(s => s.Item1 is Succeeded ||
-                (s.Item2 is ShouldNot && test.Criteria.TimeoutResult == TimeoutResult.TimedOut)) ?
-                new Succeeded(test.Name()) :
-                new Running(test.Name());
+                (s.Item2 is ShouldNot && _criteria.TimeoutResult == TimeoutResult.TimedOut)) ?
+                new Succeeded(Name) :
+                new Running(Name);
 
-            var timedOut = frameCount > test.Criteria.TimeoutFrames;
+            var timedOut = frameCount > _criteria.TimeoutFrames;
             if (timedOut)
             {
-                overallState = test.Criteria.TimeoutResult switch
+                overallState = _criteria.TimeoutResult switch
                 {
                     TimeoutResult.TimedOut => new Failed("Test timed out"),
-                    TimeoutResult.Completed => new Succeeded(test.Name()),
+                    TimeoutResult.Completed => new Succeeded(Name),
                     _ => throw new NotImplementedException()
                 };
             }
 
-            return new TestResult(overallState, states.Select(s => overallState is Running ? 
+            return new TestResult(overallState, states.Select(s => overallState is Running ?
             s.Item1 :
             s switch
             {
@@ -102,17 +120,10 @@ namespace WorldGeneratorFunctionalTests
                 (_, ShouldNot) => s.Item1,
                 (Running, Should) => new Failed(s.Item1.Name),
                 (_, Should) => s.Item1,
-                (_,_) => throw new NotImplementedException()
+                (_, _) => throw new NotImplementedException()
             }));
         }
-    }
 
-    public interface IFunctionalTest
-    {
-        IReadOnlyList<Face> Faces { get; }
-        IEnumerable<Vector3> Vertices { get; }
-        void Update(GameTime gameTime);
-        TestCriteria Criteria { get; }
-        int FrameCount { get; }
+        int FrameCount { get; set; } = 0;
     }
 }
