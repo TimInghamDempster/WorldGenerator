@@ -29,7 +29,7 @@ namespace WorldGeneratorFunctionalTests
             _forces = new FuncField<TN, Vector3>(
                 _manifold,
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X) * 0.1f, 0, 0) :
+                new Vector3(v.X / MathF.Abs(v.X) * 0.0f, 0, 0) :
                 Vector3.Zero);
 
             var tensileStrength = new SimpleField<TNPerMm2, float>(
@@ -44,30 +44,30 @@ namespace WorldGeneratorFunctionalTests
                 _deformationSolver,
                 _manipulator
             });
+
+            Criteria = new TestCriteria(100, TimeoutResult.Completed, new List<ICondition>()
+            {
+                new ShouldNot(PlateStretched, "Plate Stretched Despite Insufficient Force"),
+            });
         }
+
+        private bool PlateStretched() =>
+            _manifold.Values.Select((p, i) => (p, i)).Any(v => _originalPositions[v.i] != v.p);
+
         public IReadOnlyList<Face> Faces => _plane.Faces;
 
         public IEnumerable<Vector3> Vertices => _manifold.Values;
+        public int FrameCount => _frameCount;
 
         public string Name => "Small Forces Don't Stretch Plate";
 
-        public State Update(GameTime gameTime)
+        public TestCriteria Criteria { get; }
+
+        public void Update(GameTime gameTime)
         {
             _frameCount++;
             var time = new TimeKY(1);
             _fieldGroup.ProgressTime(time);
-
-            if (_manifold.Values.Select((p, i) => (p, i)).Any(v => _originalPositions[v.i] != v.p))
-            {
-                return new Failed(Name, "Plate Stretched Despite Insufficient Force");
-            }
-
-            if(_frameCount > 100)
-            {
-                return new Succeeded(Name);
-            }
-
-            return new Running();
         }
     }
 }

@@ -53,41 +53,50 @@ namespace WorldGeneratorFunctionalTests
                 _deformationVelocitySolver,
                 _manipulator
             });
+
+            Criteria = new(1000, TimeoutResult.TimedOut, new List<ICondition>
+            {
+                  new Should(StretchedAtWeakPoint, "Stretched at weak point"),
+                  new ShouldNot(StretchedAtNormalPoint, "Did not stretch at normal point")
+            });
         }
+        public int FrameCount => _frameCount;
+
+        private bool StretchedAtNormalPoint()
+        {
+            var stretchedEdges =
+                DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
+                Where(l => l.Value > 4.0f);
+
+            return stretchedEdges.Any(e =>
+            !_weakPoints.Contains(e.Key.Index1) &&
+            !_weakPoints.Contains(e.Key.Index2));
+        }
+
+        private bool StretchedAtWeakPoint()
+        {
+            var stretchedEdges =
+                DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
+                Where(l => l.Value > 4.0f);
+
+            return _weakPoints.All(i =>
+            stretchedEdges.Any(
+                e => e.Key.Index1 == i || e.Key.Index2 == i));
+        }
+
         public IReadOnlyList<Face> Faces => _plane.Faces;
 
         public IEnumerable<Vector3> Vertices => _manifold.Values;
 
         public string Name => "Stretches At Weak Point";
 
-        public State Update(GameTime gameTime)
+        public TestCriteria Criteria { get; }
+
+        public void Update(GameTime gameTime)
         {
             _frameCount++;
             var time = new TimeKY(1);
             _fieldGroup.ProgressTime(time);
-
-            var stretchedEdges =
-                DeformationSolver.CalcEdgeLengths(_manifold.Values.ToList(), _manifold).
-                Where(l => l.Value > 4.0f);
-
-            if (_weakPoints.All(i => 
-            stretchedEdges.Any(
-                e => e.Key.Index1 == i || e.Key.Index2 == i)))
-            {
-                return new Succeeded(Name);
-            }
-
-            if(stretchedEdges.Any(e => !_weakPoints.Contains(e.Key.Index1) && !_weakPoints.Contains(e.Key.Index2)))
-            {
-                return new Failed(Name, "Stretched at non-weak point");
-            }
-
-            if(_frameCount > 1000)
-            {
-                return new Failed(Name, "Did not stretch in 1000 frames");
-            }
-
-            return new Running();
         }
     }
 }

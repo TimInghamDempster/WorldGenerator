@@ -56,9 +56,9 @@ namespace WorldGenerator
                 new WilsonCycle(),
                 new Globe(),
             };
-        private State _status = new Running();
+        private TestResult? _status;
         private int _testIndex = -1;
-        private List<State> _results = new();
+        private List<TestResult> _results = new();
         private IFunctionalTest _currentTest;
 
         public Game1()
@@ -94,9 +94,10 @@ namespace WorldGenerator
 
         private void SetNextTest()
         {
-            if(_status is not null and not Running)
+            if(_status is not null &&
+                _status.OverallState is not Running)
             {
-                _results.Add(_status);
+                _results[0] = _status;
             }
 
             _testIndex++;
@@ -108,15 +109,15 @@ namespace WorldGenerator
             }
             catch { }
 
-            _currentTest = _tests[_testIndex];
-            _status = new Running();
+            _currentTest = _tests[_testIndex]; 
+            _results.Insert(0, new( new Running(_currentTest.Name()), Enumerable.Empty<State>()));
+
+            _status = null;
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
@@ -126,19 +127,25 @@ namespace WorldGenerator
 
             var timestep = new TimeKY(1);
 
-            if (_status is not Running) return;
+            if (_status?.OverallState is not Running and not null) return;
 
             if (_frameCount % 10 == 0)
             {
                 try
                 {
-                    _status = _currentTest.Update(gameTime);
+                    _currentTest.Update(gameTime);
+                    _status = _currentTest.Evaluate();
+                    _results[0] = _status;
 
-                    if (_status is not Running) SetNextTest();
+                    if (_status.OverallState is not Running) SetNextTest();
                 }
                 catch (Exception e)
                 {
-                    _status = new Failed(_currentTest.Name, e.Message);
+                    _status = new(
+                        new Failed(_currentTest.Name() + ", threw: " + e.Message),
+                        Enumerable.Empty<State>());
+                    _results[0] = _status;
+
                     SetNextTest();
                 }
             }
@@ -164,34 +171,33 @@ namespace WorldGenerator
 
             _spriteBatch?.Begin();
 
-            if (_testIndex < _tests.Count)
-            {
-                _spriteBatch?.DrawString(
-                    _font,
-                    $"Running: {_tests[_testIndex].Name}",
-                    new Vector2(10, 10), 
-                    Color.White);
-            }
-
-            for (int i = 0; i < _results.Count; i++)
-            {
-                (string message, Color col) status = _results[i] switch
+            var status = _results.SelectMany(r =>
+                (r.OverallState switch
                 {
-                    Running => ("Running", Color.White),
-                    Succeeded success => ($"{success.Name}: Succeeded", Color.Green),
-                    Failed failure => ($"{failure.Name}: Failed, {failure.Error}", Color.Red),
+                    Running running => new[] { ($"{running.Name}: Running", Color.White, 0) },
+                    Succeeded success => new[] { ($"{success.Name}: Succeeded", Color.Green, 0) },
+                    Failed failure => new[] { ($"{failure.Name}: Failed", Color.Red, 0) },
                     _ => throw new NotImplementedException(),
-                };
+                }).Concat(r.SubStates.Select(s =>
+                (s switch
+                {
+                        Running => ($"{s.Name}", Color.Yellow, 1),
+                        Succeeded => ($"{s.Name}", Color.Green, 1),
+                        Failed => ($"{s.Name}", Color.Red, 1),
+                        _ => throw new NotImplementedException(),
+                    }))));
 
-                _spriteBatch?.DrawString(_font, status.message, new Vector2(10, 10 + 20 * (i + 1)), status.col);
+            int itemId = 0;
+            foreach(var s in status)
+            {
+                _spriteBatch?.DrawString(_font, s.Item1, new Vector2(10 + 40 * s.Item3, 50 + 20 * itemId + 1), s.Item2);
+                itemId++;
             }
 
             _spriteBatch?.End();
 
             base.Draw(gameTime);
         }
-
-       
 
         private void DrawPerspective(Vector3 cameraLoc)
         {

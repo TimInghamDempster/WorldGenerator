@@ -53,33 +53,37 @@ namespace WorldGeneratorFunctionalTests
                 _deformationSolver,
                 _manipulator
             });
+
+            Criteria = new TestCriteria(
+                100, TimeoutResult.TimedOut,
+                new List<ICondition>()
+                {
+                    new Should(PlateStretched, "Plate Stretched"),
+                });
         }
+
+        public int FrameCount => _frameCount;
+        private bool PlateStretched()
+        {
+            var max = _manifold.Values[0].X;
+            var min = _manifold.Values[0].X;
+
+            return _centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 2.5f);
+        }
+
         public IReadOnlyList<Face> Faces => _plane.Faces;
 
         public IEnumerable<Vector3> Vertices => _manifold.Values;
 
         public string Name => "Large Forces Stretch Plate";
 
-        public State Update(GameTime gameTime)
+        public TestCriteria Criteria { get; }
+
+        public void Update(GameTime gameTime)
         {
             _frameCount++;
             var time = new TimeKY(1);
             _fieldGroup.ProgressTime(time);
-
-            var max = _manifold.Values[0].X;
-            var min = _manifold.Values[0].X;
-
-            if (_centralVerts.All(i => MathF.Abs(_manifold.Values[i].X) > 2.5f))
-            {
-                return new Succeeded(Name);
-            }
-
-            if(_frameCount > 100)
-            {
-                  return new Failed(Name, $"Plate did not stretch in 100 frames");
-            }
-
-            return new Running();
         }
     }
 }
