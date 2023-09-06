@@ -12,6 +12,7 @@ namespace WorldGenerator
         Dictionary<int, Neighbours> Neighbours { get; }
         Connectivity Connectivity { get; }
     }
+    public record Connectivity(HashSet<Edge> Edges);
 
     public interface ITimeDependent
     {
