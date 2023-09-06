@@ -7,7 +7,6 @@ namespace WorldGeneratorFunctionalTests
     {
         private readonly DeformationSolver _deformationVelocitySolver;
         private readonly List<int> _weakPoints;
-        private readonly FuncField<TN, Vector3> _forces;
         private readonly ManifoldManipulator _manipulator;
 
         public PlateStretchesAtWeakPoint()
@@ -29,11 +28,12 @@ namespace WorldGeneratorFunctionalTests
                 Select(p => p.i).
                 ToList();
 
-            _forces = new FuncField<TN, Vector3>(
-                _manifold,
+            var originalEdgePositions = edgeIndices.ToDictionary(i => i, i => _manifold.Values[i]);
+            var stretchVec = new Vector3(5, 1, 1);
+
+            var constraints = new Func<int, Vector3, Vector3>(
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X * 2.0f / MathF.Abs(v.X), 0, 0) :
-                Vector3.Zero);
+                originalEdgePositions[i] * stretchVec : v);
 
 
             var tensileStrength = new SimpleField<TNPerMm2, float>(
@@ -41,12 +41,11 @@ namespace WorldGeneratorFunctionalTests
                     (v, i) => _weakPoints.Contains(i) ? 0.1f : 1.0f).ToArray(), _manifold);
 
 
-            _deformationVelocitySolver = new DeformationSolver(_manifold, _forces, tensileStrength);
+            _deformationVelocitySolver = new DeformationSolver(_manifold, constraints, tensileStrength);
             _manipulator = new ManifoldManipulator(_manifold, _deformationVelocitySolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
             {
-                _forces,
                 _deformationVelocitySolver,
                 _manipulator
             });

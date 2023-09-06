@@ -7,8 +7,7 @@ namespace WorldGeneratorFunctionalTests
     {
         private static readonly float _planeSize = 10;
         private readonly DeformationSolver _deformationSolver;
-        private readonly IEnumerable<int> _centralVerts;
-        private readonly FuncField<TN, Vector3> _forces;
+        private readonly IReadOnlyList<int> _centralVerts;
         private readonly ManifoldManipulator _manipulator;
 
         public LargeForcesStretchPlate()
@@ -26,33 +25,35 @@ namespace WorldGeneratorFunctionalTests
             _centralVerts =
                 _manifold.Values.
                 Select((v, i) => (v, i)).
-                Where(v => 
-                (v.v.X > -1.1 && v.v.X < -0.9) || 
+                Where(v =>
+                (v.v.X > -1.1 && v.v.X < -0.9) ||
                 (v.v.X > 0.9 && v.v.X < 1.1)).
                 Select(p => p.i).
                 ToList();
 
-            _forces = new FuncField<TN, Vector3>(
-                _manifold,
+            var originalEdgePositions = edgeIndices.ToDictionary(i => i, i => _manifold.Values[i]);
+            var stretchVec = new Vector3(5, 1, 1);
+
+            var runLength = 100;
+
+            var constraints = new Func<int, Vector3, Vector3>(
                 (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / (MathF.Abs(v.X) / 20.0f), 0, 0) :
-                Vector3.Zero);
+                originalEdgePositions[i] * stretchVec : v);
 
             var tensileStrength = new SimpleField<TNPerMm2, float>(
                 _manifold.Values.Select(_ => 1f).ToArray(), _manifold);
 
-            _deformationSolver = new DeformationSolver(_manifold, _forces, tensileStrength);
+            _deformationSolver = new DeformationSolver(_manifold, constraints, tensileStrength);
             _manipulator = new ManifoldManipulator(_manifold, _deformationSolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
             {
-                _forces,
                 _deformationSolver,
                 _manipulator
             });
 
             _criteria = new TestCriteria(
-                100, TimeoutResult.TimedOut,
+                runLength, TimeoutResult.TimedOut,
                 new List<ICondition>()
                 {
                     new Should(PlateStretched, "Plate Stretched"),

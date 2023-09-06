@@ -58,7 +58,7 @@ namespace WorldGeneratorFunctionalTests
         TimeoutResult TimeoutResult,
         IEnumerable<ICondition> Conditions);
 
-    public record TestResult(State OverallState, IEnumerable<State> SubStates);
+    public record TestResult(State OverallState, IEnumerable<State> SubStates, int Frame);
 
     public class FunctionalTest
     {
@@ -111,6 +111,10 @@ namespace WorldGeneratorFunctionalTests
                     _ => throw new NotImplementedException()
                 };
             }
+            else if(_criteria.TimeoutResult == TimeoutResult.Completed)
+            {
+                overallState = new Running(Name);
+            }
 
             return new TestResult(overallState, states.Select(s => overallState is Running ?
             s.Item1 :
@@ -121,9 +125,10 @@ namespace WorldGeneratorFunctionalTests
                 (Running, Should) => new Failed(s.Item1.Name),
                 (_, Should) => s.Item1,
                 (_, _) => throw new NotImplementedException()
-            }));
+            }),
+            FrameCount);
         }
 
-        int FrameCount { get; set; } = 0;
+        public int FrameCount { get; private set; } = 0;
     }
 }

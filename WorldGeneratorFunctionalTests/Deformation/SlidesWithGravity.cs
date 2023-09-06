@@ -3,14 +3,14 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class SmallForcesDontStretchPlate : FunctionalTest
+    public class SlidesWithGravity : FunctionalTest
     {
         private readonly DeformationSolver _deformationSolver;
         private readonly Vector3[] _originalPositions;
-        private readonly FuncField<TN, Vector3> _forces;
+        //private readonly FuncField<Mm, Vector3> _forces;
         private readonly ManifoldManipulator _manipulator;
 
-        public SmallForcesDontStretchPlate()
+        public SlidesWithGravity()
         {
             _mesh = Mesh.Plane(10);
             _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
@@ -23,21 +23,17 @@ namespace WorldGeneratorFunctionalTests
 
             _originalPositions = _manifold.Values.ToArray();
 
-            _forces = new FuncField<TN, Vector3>(
-                _manifold,
-                (i, v) => edgeIndices.Contains(i) ?
-                new Vector3(v.X / MathF.Abs(v.X) * 0.0f, 0, 0) :
-                Vector3.Zero);
-
+            var constraints = 
+                new Func<int, Vector3, Vector3>((i, v) => v);
+                
             var tensileStrength = new SimpleField<TNPerMm2, float>(
                 _manifold.Values.Select(_ => 1.0f).ToArray(), _manifold);
 
-            _deformationSolver = new DeformationSolver(_manifold, _forces, tensileStrength);
+            _deformationSolver = new DeformationSolver(_manifold, constraints, tensileStrength);
             _manipulator = new ManifoldManipulator(_manifold, _deformationSolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
             {
-                _forces,
                 _deformationSolver,
                 _manipulator
             });
