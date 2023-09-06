@@ -7,19 +7,17 @@ namespace WorldGeneratorFunctionalTests
     {
         private readonly DeformationSolver _deformationSolver;
         private readonly Vector3[] _originalPositions;
-        //private readonly FuncField<Mm, Vector3> _forces;
         private readonly ManifoldManipulator _manipulator;
 
         public SlidesWithGravity()
         {
             _mesh = Mesh.Plane(10);
             _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
-            var edgeIndices =
-                _manifold.Values.
-                Select((v, i) => (v, i)).
-                Where(v => v.v.X < -4 || v.v.X > 4).
-                Select(p => p.i).
-                ToList();
+            
+            for(int i = 0; i < _manifold.Values.Length; i++)
+            {
+                _manifold.Values[i].Y = _manifold.Values[i].X / 10.0f;
+            }
 
             _originalPositions = _manifold.Values.ToArray();
 
@@ -40,12 +38,11 @@ namespace WorldGeneratorFunctionalTests
 
             _criteria = new TestCriteria(100, TimeoutResult.Completed, new List<ICondition>()
             {
-                new ShouldNot(PlateStretched, "Plate Stretched Despite Insufficient Force"),
+                new Should(PlateSlid, "Plate Moved due to Gravity"),
             });
         }
 
-        private bool PlateStretched() =>
-            _manifold?.Values.Select((p, i) => (p, i)).Any(v => _originalPositions[v.i] != v.p) ??
-            false;
+        private bool PlateSlid() =>
+            _manifold?.Values.All(v => v.X > 5) ?? false;
     }
 }
