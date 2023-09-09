@@ -13,6 +13,8 @@ namespace WorldGenerator
 
         public Connectivity Connectivity { get; }
 
+        public Dictionary<int, FaceGroup> Faces { get;}
+
         public PointCloudManifold(Vector3[] positions, IEnumerable<Face> faces)
         {
             Values = positions;
@@ -20,7 +22,7 @@ namespace WorldGenerator
                 positions.
                 Select((_, i) => (i, new Neighbours(
                     faces.Where(f => f.Indices.Contains(i)).
-                    SelectMany(f => f.Indices.Where(fi => fi > i)).ToArray()))).
+                    SelectMany(f => f.Indices.Where(fi => fi != i)).Distinct().ToArray()))).
                     ToDictionary(kvp => kvp.i, kvp => kvp.Item2);
 
             Connectivity = new(new HashSet<Edge>(
@@ -31,6 +33,13 @@ namespace WorldGenerator
                         f.Indices.
                         Where(j => j > i).
                         Select(j => new Edge(i, j))))));
+
+            Faces = new();
+            for(int i = 0; i < Values.Length; i++)
+            {
+                var faceGroup = faces.Where(f => f.Indices.Contains(i)).ToList();
+                Faces.Add(i, new FaceGroup(faceGroup));
+            }    
         }
     }
 }

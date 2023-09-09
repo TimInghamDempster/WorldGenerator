@@ -7,17 +7,20 @@ namespace WorldGenerator
     {
         private readonly Func<int, Vector3, Vector3> _externalConstraints;
         private readonly IField<TNPerMm2, float> _tensileStrength;
+        private readonly IField<TN, Vector3> _externalForces;
 
         public IManifold Manifold { get; }
 
         public DeformationSolver(
             IManifold manifold,
             Func<int, Vector3, Vector3> externalConstraints,
-            IField<TNPerMm2, float> tensileStrength)
+            IField<TNPerMm2, float> tensileStrength,
+            IField<TN, Vector3> externalForces)
         {
             Manifold = manifold;
             _externalConstraints = externalConstraints;
             _tensileStrength = tensileStrength;
+            _externalForces = externalForces;
             Values = Manifold.Values.ToArray();
         }
 
@@ -36,10 +39,19 @@ namespace WorldGenerator
             int iterations = 100;
             for(int iteration = 0; iteration < iterations; iteration++)
             {
+                ApplyExternalForces(newPositions, _externalForces, timestep);
                 ApplyExternalConstraints(newPositions, _externalConstraints, timestep);
                 maxForce = AdjustSprings(newPositions, Manifold.Values, timestep);
             }
             return newPositions.ToArray();
+        }
+
+        private void ApplyExternalForces(List<Vector3> newPositions, IField<TN, Vector3> externalForces, TimeKY timestep)
+        {
+            for(int i = 0; i < newPositions.Count; i++)
+            {
+                newPositions[i] += externalForces.Values[i] * timestep.Value;
+            }
         }
 
         public static Dictionary<Edge, float> CalcEdgeLengths(List<Vector3> positions, IManifold manifold) =>

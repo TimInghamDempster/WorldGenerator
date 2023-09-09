@@ -41,7 +41,8 @@ namespace WorldGeneratorFunctionalTests
                     (v, i) => _weakPoints.Contains(i) ? 0.1f : 1.0f).ToArray(), _manifold);
 
 
-            _deformationVelocitySolver = new DeformationSolver(_manifold, constraints, tensileStrength);
+            _deformationVelocitySolver = new DeformationSolver(_manifold, constraints, tensileStrength, 
+                new FuncField<TN, Vector3> (_manifold, (_,_) => Vector3.Zero));
             _manipulator = new ManifoldManipulator(_manifold, _deformationVelocitySolver);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>

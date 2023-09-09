@@ -3,20 +3,20 @@ using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests
 {
-    public class SlidesWithGravity : FunctionalTest
+    public class SlidesFastOnSteepSlope : FunctionalTest
     {
         private readonly DeformationSolver _deformationSolver;
         private readonly ManifoldManipulator _manipulator;
         private readonly GravitationalAcceleartionField _gravityField;
 
-        public SlidesWithGravity()
+        public SlidesFastOnSteepSlope()
         {
             _mesh = Mesh.Plane(10);
             _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
             
             for(int i = 0; i < _manifold.Values.Length; i++)
             {
-                _manifold.Values[i].Y = _manifold.Values[i].X / 10.0f;
+                _manifold.Values[i].Y = _manifold.Values[i].X / 2.0f;
             }
 
             var constraints = 
@@ -39,15 +39,11 @@ namespace WorldGeneratorFunctionalTests
                 _gravityField
             });
 
-            _criteria = new TestCriteria(100, TimeoutResult.TimedOut, new List<ICondition>()
+            _criteria = new TestCriteria(20, TimeoutResult.TimedOut, new List<ICondition>()
             {
                 new Should(PlateSlid, "Plate Moved due to Gravity"),
-                new ShouldNot(PlateSlidFast, "Plate Moved too fast due to Gravity"),
             });
         }
-
-        private bool PlateSlidFast() =>
-            PlateSlid() && FrameCount < 30;
 
         private bool PlateSlid() =>
             _manifold?.Values.All(v => v.X < -1) ?? false;

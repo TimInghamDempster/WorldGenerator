@@ -44,6 +44,8 @@ namespace WorldGenerator
                 new LargeForcesStretchPlate(),
                 new PlateStretchesAtWeakPoint(),
                 new SlidesWithGravity(),
+                new SlidesFastOnSteepSlope(),
+                new DoesntSlideOnFlat(),
                 new OldPlateSubductsSpontaneously(),
                 new DiscontinuityInducesSubduction(),
                 new RollbackCreatesContinent(),
