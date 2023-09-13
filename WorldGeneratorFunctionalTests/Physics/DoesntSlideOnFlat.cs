@@ -36,7 +36,7 @@ namespace WorldGeneratorFunctionalTests
 
             _criteria = new TestCriteria(100, TimeoutResult.Completed, new List<ICondition>()
             {
-                new ShouldNot(PlateSlid, "Plate Moved due to Gravity"),
+                new ShouldNot(PlateSlid, "Plate Didn't Move due to Gravity"),
             });
         }
 

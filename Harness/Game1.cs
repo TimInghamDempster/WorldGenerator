@@ -26,6 +26,7 @@ namespace WorldGenerator
         private Matrix _projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.01f, 100f);
         private TextureCube? _globeTexture;
         private TextureCube? _normalTexture;
+        private Texture2D? _pointTexture;
         private const int _cubeTexSize = 1024;
         private const float _initialZoom = 3300;
         private float _zoomFactor = _initialZoom;
@@ -85,6 +86,7 @@ namespace WorldGenerator
             _globeTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Color);
             _normalTexture = new TextureCube(GraphicsDevice, _cubeTexSize, true, SurfaceFormat.Vector4);
 
+            _pointTexture = Texture2D.FromFile(GraphicsDevice, "Content/blank.png");
 
             _width = _graphics.PreferredBackBufferWidth;
             _height = _graphics.PreferredBackBufferHeight;
@@ -137,6 +139,7 @@ namespace WorldGenerator
                 try
                 {
                     _currentTest.Update(gameTime);
+                    _currentTest.PostUpdate();
                     _status = _currentTest.Evaluate();
                     _results[0] = _status;
 
@@ -197,9 +200,33 @@ namespace WorldGenerator
                 itemId++;
             }
 
+            DrawGraph(_currentTest.SeriesData);
+
             _spriteBatch?.End();
 
             base.Draw(gameTime);
+        }
+
+        private void DrawGraph(IReadOnlyList<float> seriesData)
+        {
+            if(!seriesData.Any()) return;
+
+            var max = seriesData.Max();
+            var min = seriesData.Min();
+
+            var range = max - min;
+
+            var graphHeight = 100;
+            
+            var normalisedData = seriesData.Select(d => (d - min) / range);
+
+            foreach(var (data, index) in normalisedData.Select((d, i) => (d, i)))
+            {
+                var x = 500 + index * 5;
+                var y = 100 + (1 - data) * graphHeight;
+
+                _spriteBatch?.Draw(_pointTexture, new Rectangle(x, (int)y, 1, 1), Color.White);
+            }
         }
 
         private void DrawPerspective(Vector3 cameraLoc)

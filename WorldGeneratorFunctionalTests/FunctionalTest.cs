@@ -65,6 +65,9 @@ namespace WorldGeneratorFunctionalTests
 
     public class FunctionalTest
     {
+        protected List<float> _seriesData = new();
+        public IReadOnlyList<float> SeriesData => _seriesData;
+
         public IReadOnlyList<Face> Faces => 
             _mesh?.Faces ?? throw new NotImplementedException();
         public IEnumerable<Vector3> Vertices =>
@@ -82,6 +85,8 @@ namespace WorldGeneratorFunctionalTests
         protected FieldGroup? _fieldGroup;
         public string Name =>
             GetType().Name.Replace('_', ' ');
+
+        public virtual void PostUpdate() { }
 
         public TestResult Evaluate()
         {

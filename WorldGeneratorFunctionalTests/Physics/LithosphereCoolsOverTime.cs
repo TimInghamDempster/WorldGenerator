@@ -30,6 +30,9 @@ namespace WorldGeneratorFunctionalTests
             });
         }
 
+        public override void PostUpdate() =>
+            _seriesData.Add(_temperatureField.Values.Average());
+
         private bool CooledToCriticalTemperatureTooFast() =>
             CooledToCriticalTemperature() && 
             FrameCount * _timestepKY < 
