@@ -13,7 +13,7 @@
 
         public static int OceanLithosphereMimimumLifespanKY =>
             OceanLithosphereMimimumLifespanMY * 1000;
-        public static float LithospereCriticalTemperatureC => 200;
+        public static float LithospereCriticalTemperatureC => 130;
 
         public static float AesthenosphereTemperatureC => 1300;
         public static float SurfaceTemperatureC => 0;

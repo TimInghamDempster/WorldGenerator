@@ -21,14 +21,26 @@ namespace WorldGeneratorFunctionalTests
                 _temperatureField
             });
 
-            var timesteps = (int)((Constants.OceanLithosphereMimimumLifespanKY / _timestepKY) * 1.05);
+            var baseTemp = _temperatureField.Values.Average();
+            _seriesData.Add(baseTemp);
 
-            _criteria = new TestCriteria(timesteps, TimeoutResult.TimedOut, new List<ICondition>()
+            var halfLife = 15;
+
+            var timesteps = 100;
+
+            _criteria = new TestCriteria(timesteps, TimeoutResult.Completed, new List<ICondition>()
             {
-                new Should(CooledToCriticalTemperature, "Plate Cooled Over Time"),
-                new ShouldNot(CooledToCriticalTemperatureTooFast, "Plate Cooled Too Fast"),
+                new ShouldNot(() => AboveTempAfterTime(baseTemp / 2, halfLife + 1), "First half life cool"),
+                new ShouldNot(() => BelowTempBeforeTime(baseTemp / 2, halfLife), "First half life hot"),
+                new ShouldNot(() => AboveTempAfterTime(baseTemp / 4, halfLife * 2 + 2), "Second half life cool"),
+                new ShouldNot(() => BelowTempBeforeTime(baseTemp / 4, halfLife * 2), "Second half life hot"),
             });
         }
+
+        private bool BelowTempBeforeTime(float temp, int time) =>
+            _seriesData.Select((t, i) => (t, i)).Any(v => v.t < temp && v.i < time);
+        private bool AboveTempAfterTime(float temp, int time) =>
+            _seriesData.Select((t, i) => (t, i)).Any(v => v.t > temp && v.i > time);
 
         public override void PostUpdate() =>
             _seriesData.Add(_temperatureField.Values.Average());

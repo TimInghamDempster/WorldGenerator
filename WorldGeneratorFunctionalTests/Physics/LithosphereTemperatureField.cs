@@ -28,7 +28,7 @@ namespace WorldGeneratorFunctionalTests.Physics
             var aesthenosphereThermalConductivity = 0.1f;
             var surfaceThermalConductivity = 0.9f;
 
-            var temperatureFlowSpeed = 0.0135f;
+            var temperatureFlowSpeed = 0.055f;
 
             for(int i = 0; i < Values.Length; i++)
             {
