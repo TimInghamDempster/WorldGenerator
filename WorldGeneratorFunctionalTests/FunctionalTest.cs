@@ -58,7 +58,10 @@ namespace WorldGeneratorFunctionalTests
         TimeoutResult TimeoutResult,
         IEnumerable<ICondition> Conditions);
 
-    public record TestResult(State OverallState, IEnumerable<State> SubStates, int Frame);
+    public record TestResult(
+        State OverallState, 
+        IEnumerable<State> SubStates,
+        int Frame, int TotalFrames);
 
     public class FunctionalTest
     {
@@ -106,7 +109,7 @@ namespace WorldGeneratorFunctionalTests
             {
                 overallState = _criteria.TimeoutResult switch
                 {
-                    TimeoutResult.TimedOut => new Failed("Test timed out"),
+                    TimeoutResult.TimedOut => new Failed($"{Name} timed out"),
                     TimeoutResult.Completed => new Succeeded(Name),
                     _ => throw new NotImplementedException()
                 };
@@ -126,7 +129,8 @@ namespace WorldGeneratorFunctionalTests
                 (_, Should) => s.Item1,
                 (_, _) => throw new NotImplementedException()
             }),
-            FrameCount);
+            FrameCount,
+            _criteria.TimeoutFrames);
         }
 
         public int FrameCount { get; private set; } = 0;

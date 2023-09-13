@@ -46,6 +46,7 @@ namespace WorldGenerator
                 new SlidesWithGravity(),
                 new SlidesFastOnSteepSlope(),
                 new DoesntSlideOnFlat(),
+                new LithosphereCoolsOverTime(),
                 new OldPlateSubductsSpontaneously(),
                 new DiscontinuityInducesSubduction(),
                 new RollbackCreatesContinent(),
@@ -112,7 +113,7 @@ namespace WorldGenerator
             catch { }
 
             _currentTest = _tests[_testIndex]; 
-            _results.Insert(0, new( new Running(_currentTest.Name), Enumerable.Empty<State>(), 0));
+            _results.Insert(0, new( new Running(_currentTest.Name), Enumerable.Empty<State>(), 0, 0));
 
             _status = null;
         }
@@ -145,7 +146,7 @@ namespace WorldGenerator
                 {
                     _status = new(
                         new Failed(_currentTest.Name + ", threw: " + e.Message),
-                        Enumerable.Empty<State>(), -1);
+                        Enumerable.Empty<State>(), -1, -1);
                     _results[0] = _status;
 
                     SetNextTest();
@@ -176,7 +177,7 @@ namespace WorldGenerator
             var status = _results.SelectMany(r =>
                 (r.OverallState switch
                 {
-                    Running running => new[] { ($"{running.Name}: Running, Frame: {r.Frame}", Color.White, 0) },
+                    Running running => new[] { ($"{running.Name}: Running, Frame: {r.Frame} / {r.TotalFrames}", Color.White, 0) },
                     Succeeded success => new[] { ($"{success.Name}: Succeeded", Color.Green, 0) },
                     Failed failure => new[] { ($"{failure.Name}: Failed", Color.Red, 0) },
                     _ => throw new NotImplementedException(),

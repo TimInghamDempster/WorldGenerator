@@ -9,6 +9,14 @@
         public static float OceanCrustDensityGTPerKm3 => 3.0f;
 
         public static float MantleDensityGTPerKm3 => 3.6f;
+        public static int OceanLithosphereMimimumLifespanMY => 200;
+
+        public static int OceanLithosphereMimimumLifespanKY =>
+            OceanLithosphereMimimumLifespanMY * 1000;
+        public static float LithospereCriticalTemperatureC => 200;
+
+        public static float AesthenosphereTemperatureC => 1300;
+        public static float SurfaceTemperatureC => 0;
 
         public static float CellVolumeMm3(int cellCount) => 
             EarthSurfaceAreaMm2 * CrustThicknessMm / cellCount;
