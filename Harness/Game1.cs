@@ -233,7 +233,7 @@ namespace WorldGenerator
         {
             try
             {
-                _worldMesh?.SetVertices(_currentTest.Vertices, GraphicsDevice);
+                _worldMesh?.SetVertices(_currentTest.Vertices, _currentTest.Colors.Values, GraphicsDevice);
             }
             catch { }
 

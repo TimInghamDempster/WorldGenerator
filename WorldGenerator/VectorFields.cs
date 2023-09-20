@@ -26,6 +26,8 @@ namespace WorldGenerator
     public record Connectivity(HashSet<Edge> Edges);
     public record FaceGroup(IEnumerable<Face> Faces);
 
+    public interface ITimeDependentField<TUnit, TStorage> : IField<TUnit, TStorage>, ITimeDependent { }
+
     public interface ITimeDependent
     {
         void ProgressTime(TimeKY timestep);
@@ -51,6 +53,33 @@ namespace WorldGenerator
             foreach(var field in _fields)
             {
                 field.ProgressTime(timestep);
+            }
+        }
+    }
+
+    public class ColourField<TUnit> : IField<Unitless, Color>, ITimeDependent
+    {
+        private readonly IField<TUnit, float> _inputField;
+        private readonly ColourGradient _colourGradient;
+
+        public IManifold Manifold { get; }
+
+        public Color[] Values { get; }
+
+        public ColourField(IManifold manifold, IField<TUnit, float> inputField, ColourGradient colourGradient)
+        {
+            Manifold = manifold;
+            _inputField = inputField;
+            _colourGradient = colourGradient;
+            Values = inputField.Values.Select(
+                v => colourGradient.ColourAt(v)).ToArray();
+        }
+
+        public void ProgressTime(TimeKY timestep)
+        {
+            for(int i = 0; i < Values.Length; i++)
+            {
+                Values[i] = _colourGradient.ColourAt(_inputField.Values[i]);
             }
         }
     }

@@ -15,7 +15,7 @@ namespace WorldGenerator
 
         internal RenderMesh(Mesh mesh, GraphicsDevice graphicsDevice)
         {
-            SetVertices(mesh.Vertices, graphicsDevice);
+            SetVertices(mesh.Vertices, new Color[mesh.Vertices.Count], graphicsDevice);
 
             var indexBuffer = new IndexBuffer(graphicsDevice, typeof(int), mesh.Faces.Count * 3, BufferUsage.WriteOnly);
             indexBuffer.SetData(mesh.Faces.SelectMany(f => f.Indices).ToArray());
@@ -25,11 +25,11 @@ namespace WorldGenerator
         }
 
         [MemberNotNull(nameof(VertexBuffer))]
-        public void SetVertices(IEnumerable<Vector3> vertices, GraphicsDevice graphicsDevice)
+        public void SetVertices(IEnumerable<Vector3> vertices, IReadOnlyList<Color> colors, GraphicsDevice graphicsDevice)
         {
             var vertexBuffer = new VertexBuffer(graphicsDevice, typeof(PositionColorTex3Vertex), vertices.Count(), BufferUsage.WriteOnly);
             vertexBuffer.SetData(vertices.Select(
-                v => new PositionColorTex3Vertex(v, Color.White, new Vector3(0.0f, 0.0f, 0.0f))).ToArray());
+                (v, i) => new PositionColorTex3Vertex(v, colors[i], new Vector3(0.0f, 0.0f, 0.0f))).ToArray());
             VertexBuffer = vertexBuffer;
         }
     }

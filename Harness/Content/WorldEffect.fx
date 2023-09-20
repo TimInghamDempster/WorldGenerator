@@ -66,7 +66,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 PixelShaderOutput SimplePS(VertexShaderOutput input)
 {
 	PixelShaderOutput output = (PixelShaderOutput)0;
-	output.Color = 1.0f;
+	output.Color = input.Color;
 
 	return output;
 }

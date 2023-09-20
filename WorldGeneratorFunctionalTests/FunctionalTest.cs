@@ -43,7 +43,7 @@ namespace WorldGeneratorFunctionalTests
 
         public State Evaluate()
         {
-            return _isInState() ?  new Failed(_name) : new Running(_name);
+            return _isInState() ? new Failed(_name) : new Running(_name);
         }
     }
 
@@ -54,12 +54,12 @@ namespace WorldGeneratorFunctionalTests
     }
 
     public record TestCriteria(
-        int TimeoutFrames, 
+        int TimeoutFrames,
         TimeoutResult TimeoutResult,
         IEnumerable<ICondition> Conditions);
 
     public record TestResult(
-        State OverallState, 
+        State OverallState,
         IEnumerable<State> SubStates,
         int Frame, int TotalFrames);
 
@@ -68,7 +68,7 @@ namespace WorldGeneratorFunctionalTests
         protected List<float> _seriesData = new();
         public IReadOnlyList<float> SeriesData => _seriesData;
 
-        public IReadOnlyList<Face> Faces => 
+        public IReadOnlyList<Face> Faces =>
             _mesh?.Faces ?? throw new NotImplementedException();
         public IEnumerable<Vector3> Vertices =>
             _manifold?.Values ?? throw new NotImplementedException();
@@ -77,6 +77,16 @@ namespace WorldGeneratorFunctionalTests
             var time = new TimeKY(1);
             _fieldGroup?.ProgressTime(time);
             FrameCount++;
+        }
+
+        protected IField<Unitless, Color>? _colors;
+        public IField<Unitless, Color> Colors
+        {
+            get
+            {
+                if (_manifold is null) throw new InvalidOperationException();
+                return _colors ??= new FuncField<Unitless, Color>(_manifold, (i, v) => Color.White);
+            }
         }
 
         protected TestCriteria? _criteria;
