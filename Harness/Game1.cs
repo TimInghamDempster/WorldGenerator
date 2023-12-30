@@ -23,7 +23,7 @@ namespace WorldGenerator
         private RenderMesh? _worldMesh;
         private Matrix _world = Matrix.CreateTranslation(0, 0, 0);
         private Matrix _view = Matrix.CreateLookAt(new Vector3(0, 0, 3), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
-        private Matrix _projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.01f, 100f);
+        private Matrix _projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 10000f);
         private TextureCube? _globeTexture;
         private TextureCube? _normalTexture;
         private Texture2D? _pointTexture;
@@ -48,6 +48,7 @@ namespace WorldGenerator
                 new SlidesFastOnSteepSlope(),
                 new DoesntSlideOnFlat(),
                 new LithosphereCoolsOverTime(),
+                new MantlePlumeWarmsLithosphere(),
                 new OldPlateSubductsSpontaneously(),
                 new DiscontinuityInducesSubduction(),
                 new RollbackCreatesContinent(),
@@ -274,7 +275,7 @@ namespace WorldGenerator
         {
             _zoomFactor = _initialZoom - Mouse.GetState().ScrollWheelValue / 10.0f;
 
-            var cameraLoc = new Vector3(0.0f, 0.0f, _zoomFactor / 200.0f);
+            var cameraLoc = new Vector3(0.0f, 0.0f, (_zoomFactor * _currentTest.ZoomModifier) / 200.0f);
 
             var mousePosY = (Mouse.GetState().Y - (_height * 0.5f)) * _mouseSensitivity;
             mousePosY = MathF.Min(2.0f, MathF.Max(-2.0f, mousePosY));

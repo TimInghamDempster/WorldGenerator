@@ -1,15 +1,18 @@
-﻿using WorldGenerator;
+﻿using Microsoft.Xna.Framework;
+using WorldGenerator;
 
 namespace WorldGeneratorFunctionalTests.Physics
 {
     public class LithosphereTemperatureField : IField<Celsius, float>, ITimeDependent
     {
+        private readonly IPlumeSource _plumes;
+
         public IManifold Manifold { get; }
 
-        public LithosphereTemperatureField(IManifold manifold)
+        public LithosphereTemperatureField(IManifold manifold, IPlumeSource plumes)
         {
             Manifold = manifold;
-
+            _plumes = plumes;
             Values = new float[Manifold.Values.Length];
 
             for (int i = 0; i < Values.Length; i++)
@@ -44,6 +47,16 @@ namespace WorldGeneratorFunctionalTests.Physics
                 var flow = gradient * temperatureFlowSpeed;
 
                 Values[i] = temperature + flow;
+
+                foreach(var plume in _plumes.Plumes)
+                {
+                    var distance = Vector3.Distance(cell, plume.Location);
+
+                    if(distance < Constants.PlumeRadiusKm)
+                    {
+                        Values[i] = aesthenosphereTemp;
+                    }
+                }
             }
         }
     }

@@ -254,7 +254,7 @@ namespace WorldGenerator
             return new (faces, verts);
         }
 
-        public static Mesh Plane(int subdivisons)
+        public static Mesh Plane(int subdivisons, float scale = 1)
         {
             var verts = new List<Vector3>();
             var faces = new List<Face>();
@@ -263,7 +263,7 @@ namespace WorldGenerator
             {
                 for (int x = 0; x <= subdivisons; x++)
                 {
-                    verts.Add(new Vector3(x - subdivisons / 2.0f, 0, y - subdivisons / 2.0f));
+                    verts.Add(new Vector3((x - subdivisons / 2.0f) * scale, 0, (y - subdivisons / 2.0f) * scale));
                 }
             }
 

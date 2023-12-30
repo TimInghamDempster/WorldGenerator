@@ -149,5 +149,6 @@ namespace WorldGeneratorFunctionalTests
         }
 
         public int FrameCount { get; private set; } = 0;
+        public virtual float ZoomModifier => 1;
     }
 }

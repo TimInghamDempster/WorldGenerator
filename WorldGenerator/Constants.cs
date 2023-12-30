@@ -18,6 +18,8 @@
         public static float AesthenosphereTemperatureC => 1300;
         public static float SurfaceTemperatureC => 0;
 
+        public static float PlumeRadiusKm => 300;
+
         public static float CellVolumeMm3(int cellCount) => 
             EarthSurfaceAreaMm2 * CrustThicknessMm / cellCount;
     }

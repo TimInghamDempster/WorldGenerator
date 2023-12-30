@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Moq;
 using WorldGenerator;
 using WorldGeneratorFunctionalTests.Physics;
+using WorldGeneratorFunctionalTests.Utils;
 
 namespace WorldGeneratorFunctionalTests
 {
@@ -14,7 +15,10 @@ namespace WorldGeneratorFunctionalTests
             _mesh = Mesh.Plane(10);
             _manifold = new PointCloudManifold(_mesh.Vertices.ToArray(), _mesh.Faces);
 
-            _temperatureField = new(_manifold);
+            var plumeSource = new Mock<IPlumeSource>();
+            plumeSource.SetupGet(x => x.Plumes).Returns(new List<Plume>());
+
+            _temperatureField = new(_manifold, plumeSource.Object);
 
             var baseTemp = _temperatureField.Values.Average();
             _seriesData.Add(baseTemp);
@@ -31,7 +35,7 @@ namespace WorldGeneratorFunctionalTests
                 new ShouldNot(() => BelowTempBeforeTime(baseTemp / 4, halfLife * 2), "Second half life hot"),
             });
 
-            _colors = TemperatureGradient(_temperatureField, _manifold);
+            _colors = Rendering.TemperatureGradient(_temperatureField, _manifold);
 
             _fieldGroup = new FieldGroup(new List<ITimeDependent>
             {
@@ -40,33 +44,7 @@ namespace WorldGeneratorFunctionalTests
             });
         }
 
-        public static IField<Unitless, Color> TemperatureGradient(IField<Celsius, float> temperatureField, IManifold manifold)
-        {
-            var firstPoint = new GradientPoint(Constants.SurfaceTemperatureC, Color.DarkBlue);
-            var lastPoint = new GradientPoint(Constants.AesthenosphereTemperatureC, Color.DarkRed);
-            var midPoint = new GradientPoint(
-                (Constants.SurfaceTemperatureC + Constants.AesthenosphereTemperatureC) * 0.5f, 
-                Color.White);
-            var earlyPoint = new GradientPoint(
-                Constants.SurfaceTemperatureC * 0.75f + Constants.AesthenosphereTemperatureC * 0.25f, 
-                Color.Blue);
-            var latePoint = new GradientPoint(
-                Constants.SurfaceTemperatureC * 0.25f + Constants.AesthenosphereTemperatureC * 0.75f, 
-                Color.Red);
-
-            var colors =
-                new ColourField<Celsius>(manifold, temperatureField,
-                new(new[]
-                {
-                    firstPoint,
-                    earlyPoint,
-                    midPoint,
-                    latePoint,
-                    lastPoint
-                }));
-
-            return colors;
-        }
+        
 
         private bool BelowTempBeforeTime(float temp, int time) =>
             _seriesData.Select((t, i) => (t, i)).Any(v => v.t < temp && v.i < time);
